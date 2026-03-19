@@ -1,0 +1,87 @@
+import request from './request'
+
+/**
+ * 挂接管理API
+ */
+
+/**
+ * 自动挂接档案
+ * @param {number} archiveId 档案ID
+ * @returns {Promise}
+ */
+export const autoHangOnApi = (archiveId) => {
+  return request.post(`/hang-on/auto/${archiveId}`)
+}
+
+/**
+ * 手动挂接档案
+ * @param {number} archiveId 档案ID
+ * @param {string} systemCode 目标系统代码
+ * @param {string} operateBy 操作人
+ * @returns {Promise}
+ */
+export const manualHangOnApi = (archiveId, systemCode, operateBy) => {
+  return request.post(`/hang-on/manual/${archiveId}?systemCode=${systemCode}&operateBy=${operateBy}`)
+}
+
+/**
+ * 批量挂接档案
+ * @param {object} data 请求参数
+ * @returns {Promise}
+ */
+export const batchHangOnApi = (data) => {
+  return request.post('/hang-on/batch', data)
+}
+
+/**
+ * 解除挂接档案
+ * @param {number} archiveId 档案ID
+ * @param {string} systemCode 目标系统代码
+ * @param {string} operateBy 操作人
+ * @returns {Promise}
+ */
+export const unhookApi = (archiveId, systemCode, operateBy) => {
+  return request.post(`/hang-on/unhook/${archiveId}?systemCode=${systemCode}&operateBy=${operateBy}`)
+}
+
+/**
+ * 重试挂接失败的档案
+ * @param {number} archiveId 档案ID
+ * @param {string} operateBy 操作人
+ * @returns {Promise}
+ */
+export const retryHangOnApi = (archiveId, operateBy) => {
+  return request.post(`/hang-on/retry/${archiveId}?operateBy=${operateBy}`)
+}
+
+/**
+ * 获取挂接关系
+ * @param {number} archiveId 档案ID
+ * @returns {Promise}
+ */
+export const getRelationsApi = (archiveId) => {
+  return request.get(`/hang-on/relations/${archiveId}`)
+}
+
+// 导出别名，兼容RelationVisualizationView.vue中的导入
+export const getHangOnRelations = getRelationsApi
+
+/**
+ * 修改档案挂接关系
+ * @param {number} archiveId 档案ID
+ * @param {string} systemCode 目标系统代码
+ * @param {object} data 修改数据
+ * @returns {Promise}
+ */
+export const modifyHangOnRelationApi = (archiveId, systemCode, data) => {
+  return request.put(`/hang-on/modify/${archiveId}?systemCode=${systemCode}`, data)
+}
+
+/**
+ * 获取挂接日志
+ * @param {object} params 查询参数
+ * @returns {Promise}
+ */
+export const getLogsApi = (params) => {
+  return request.get(`/hang-on/log/query`, { params })
+}
