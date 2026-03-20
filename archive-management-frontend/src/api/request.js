@@ -7,7 +7,7 @@ const requestCache = new Map()
 
 // 创建axios实例
 const service = axios.create({
-  baseURL: 'http://localhost:8080/archive',
+  baseURL: '/api',
   timeout: 10000
 })
 
