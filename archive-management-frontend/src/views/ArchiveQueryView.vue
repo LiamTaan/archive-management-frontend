@@ -127,7 +127,7 @@
                   </template>
                 </el-table-column>
                 <el-table-column prop="createTime" label="创建时间" width="200" />
-                <el-table-column label="操作" width="350">
+                <el-table-column label="操作" width="250">
                   <template #default="scope">
                     <el-button type="primary" size="small" @click="handleViewDetail(scope.row.id)">
                       查看详情

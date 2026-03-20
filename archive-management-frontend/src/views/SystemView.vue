@@ -17,10 +17,14 @@
 
             <el-table :data="interfaces" border style="width: 100%">
               <el-table-column prop="id" label="ID" width="80" />
-              <el-table-column prop="interfaceName" label="接口名称" width="150" />
+              <el-table-column prop="interfaceName" label="接口名称" width="180" />
+              <el-table-column prop="interfaceCode" label="接口编码" width="150" />
               <el-table-column prop="businessSystem" label="业务系统" width="150" />
-              <el-table-column prop="interfaceUrl" label="接口URL" />
+              <el-table-column prop="interfaceUrl" label="接口URL" width="300" show-overflow-tooltip />
+              <el-table-column prop="metadataUrl" label="元信息URL" width="300" show-overflow-tooltip />
               <el-table-column prop="requestMethod" label="请求方法" width="100" />
+              <el-table-column prop="transferMode" label="传输模式" width="100" />
+              <el-table-column prop="maxFileSize" label="最大文件大小" width="120" />
               <el-table-column prop="status" label="状态" width="100">
                 <template #default="scope">
                   <el-switch
@@ -31,7 +35,7 @@
                   />
                 </template>
               </el-table-column>
-              <el-table-column prop="createTime" label="创建时间" width="200" />
+              <el-table-column prop="createTime" label="创建时间" width="180" />
               <el-table-column label="操作" width="180">
                 <template #default="scope">
                   <el-button type="primary" size="small" @click="showEditInterfaceDialog(scope.row)">
@@ -62,11 +66,17 @@
                 <el-form-item label="接口名称" prop="interfaceName">
                   <el-input v-model="interfaceForm.interfaceName" placeholder="请输入接口名称" />
                 </el-form-item>
+                <el-form-item label="接口编码" prop="interfaceCode">
+                  <el-input v-model="interfaceForm.interfaceCode" placeholder="请输入接口编码" />
+                </el-form-item>
                 <el-form-item label="业务系统" prop="businessSystem">
                   <el-input v-model="interfaceForm.businessSystem" placeholder="请输入业务系统名称" />
                 </el-form-item>
                 <el-form-item label="接口URL" prop="interfaceUrl">
                   <el-input v-model="interfaceForm.interfaceUrl" placeholder="请输入接口URL" />
+                </el-form-item>
+                <el-form-item label="元信息URL" prop="metadataUrl">
+                  <el-input v-model="interfaceForm.metadataUrl" placeholder="请输入文件元信息接口URL" />
                 </el-form-item>
                 <el-form-item label="请求方法" prop="requestMethod">
                   <el-select v-model="interfaceForm.requestMethod" placeholder="请选择请求方法">
@@ -76,12 +86,20 @@
                     <el-option label="DELETE" value="DELETE" />
                   </el-select>
                 </el-form-item>
-                <el-form-item label="参数映射">
+                <el-form-item label="请求参数">
                   <el-input
                     v-model="interfaceForm.requestParams"
                     type="textarea"
                     :rows="3"
-                    placeholder="请输入参数映射（JSON格式）"
+                    placeholder="请输入请求参数（JSON格式）"
+                  />
+                </el-form-item>
+                <el-form-item label="请求头">
+                  <el-input
+                    v-model="interfaceForm.requestHeaders"
+                    type="textarea"
+                    :rows="3"
+                    placeholder="请输入请求头（JSON格式）"
                   />
                 </el-form-item>
                 <el-form-item label="接口密钥">
@@ -89,6 +107,24 @@
                 </el-form-item>
                 <el-form-item label="超时时间">
                   <el-input v-model="interfaceForm.timeout" placeholder="请输入超时时间（秒）" type="number" min="1" max="300" />
+                </el-form-item>
+                <el-form-item label="单文件大小限制">
+                  <el-input v-model="interfaceForm.maxFileSize" placeholder="请输入单文件大小限制（MB）" type="number" min="1" max="1024" />
+                </el-form-item>
+                <el-form-item label="传输模式" prop="transferMode">
+                  <el-select v-model="interfaceForm.transferMode" placeholder="请选择传输模式">
+                    <el-option label="直传（DIRECT）" value="DIRECT" />
+                    <el-option label="分片（SHARD）" value="SHARD" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="采集调度规则">
+                  <el-input v-model="interfaceForm.cronExpression" placeholder="请输入Cron表达式，如：0 0 2 * * ?" />
+                </el-form-item>
+                <el-form-item label="分片大小">
+                  <el-input v-model="interfaceForm.chunkSize" placeholder="请输入分片大小（MB）" type="number" min="1" max="100" />
+                </el-form-item>
+                <el-form-item label="文件存储路径">
+                  <el-input v-model="interfaceForm.storagePath" placeholder="请输入文件存储路径" />
                 </el-form-item>
               </el-form>
               <template #footer>
@@ -167,6 +203,10 @@ const interfaceRules = {
     { required: true, message: '请输入接口名称', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
   ],
+  interfaceCode: [
+    { required: true, message: '请输入接口编码', trigger: 'blur' },
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+  ],
   businessSystem: [
     { required: true, message: '请输入业务系统名称', trigger: 'blur' },
     { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
@@ -174,8 +214,14 @@ const interfaceRules = {
   interfaceUrl: [
     { required: true, message: '请输入接口URL', trigger: 'blur' }
   ],
+  metadataUrl: [
+    { required: true, message: '请输入文件元信息接口URL', trigger: 'blur' }
+  ],
   requestMethod: [
     { required: true, message: '请选择请求方法', trigger: 'change' }
+  ],
+  transferMode: [
+    { required: true, message: '请选择传输模式', trigger: 'change' }
   ]
 }
 

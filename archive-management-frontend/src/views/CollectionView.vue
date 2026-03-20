@@ -510,9 +510,9 @@ const getInterfaceOptions = async () => {
   try {
     const response = await getInterfaceConfigsApi()
     if (response.code === 200) {
-      // 将接口配置转换为选项格式
+      // 将接口配置转换为选项格式，只显示接口编码
       interfaceOptions.value = response.data.records.map(config => ({
-        label: `${config.interfaceName} - ${config.businessSystem}`,
+        label: config.businessSystem,
         value: config.id
       }))
     }

@@ -87,10 +87,10 @@
               <el-form-item label="采集类型">
                 <el-select v-model="collectionLogForm.collectionType" placeholder="请选择采集类型">
                   <el-option label="全部" value="" />
-                  <el-option label="自动采集" value="1" />
-                  <el-option label="手动采集" value="2" />
-                  <el-option label="批量采集" value="3" />
-                  <el-option label="外部导入" value="4" />
+                  <el-option label="自动采集" value="2" />
+                  <el-option label="手动采集" value="0" />
+                  <el-option label="批量采集" value="1" />
+                  <el-option label="外部导入" value="3" />
                 </el-select>
               </el-form-item>
               <el-form-item label="操作人">
@@ -238,7 +238,7 @@ const handleGetHangOnLogs = async () => {
     const response = await getLogsApi(params)
     if (response.code === 200) {
       hangOnLogs.value = response.data.records
-      hangOnLogTotal.value = response.data.total
+      hangOnLogTotal.value = Number(response.data.total)
     } else {
       ElMessage.error('查询挂接日志失败：' + response.message)
     }
@@ -249,13 +249,13 @@ const handleGetHangOnLogs = async () => {
   }
 }
 
-const resetHangOnLogForm = () => {
+const resetHangOnLogForm = async () => {
   hangOnLogForm.archiveId = ''
   hangOnLogForm.operateBy = ''
   hangOnLogForm.result = ''
   hangOnLogForm.hangOnType = ''
-  hangOnLogs.value = []
-  hangOnLogTotal.value = 0
+  hangOnLogCurrentPage.value = 1 // 重置页码
+  await handleGetHangOnLogs() // 调用查询函数刷新日志
 }
 
 const handleHangOnLogPageChange = (page) => {
@@ -291,7 +291,7 @@ const handleGetCollectionLogs = async () => {
     const response = await getCollectionLogsApi(params)
     if (response.code === 200) {
       collectionLogs.value = response.data.records
-      collectionLogTotal.value = response.data.total
+      collectionLogTotal.value = Number(response.data.total)
     } else {
       ElMessage.error('查询采集日志失败：' + response.message)
     }
@@ -302,12 +302,12 @@ const handleGetCollectionLogs = async () => {
   }
 }
 
-const resetCollectionLogForm = () => {
+const resetCollectionLogForm = async () => {
   collectionLogForm.collectionType = ''
   collectionLogForm.operateBy = ''
   collectionLogForm.result = ''
-  collectionLogs.value = []
-  collectionLogTotal.value = 0
+  collectionLogCurrentPage.value = 1 // 重置页码
+  await handleGetCollectionLogs() // 调用查询函数刷新日志
 }
 
 const handleCollectionLogPageChange = (page) => {
@@ -317,10 +317,10 @@ const handleCollectionLogPageChange = (page) => {
 
 const getCollectionTypeLabel = (type) => {
   const typeMap = {
-    1: '自动采集',
-    2: '手动采集',
-    3: '批量采集',
-    4: '外部导入'
+    2: '自动采集',
+    0: '手动采集',
+    1: '批量采集',
+    3: '外部导入'
   }
   return typeMap[type] || '未知类型'
 }
@@ -355,7 +355,7 @@ const handleGetSystemLogs = async () => {
     const response = await getSystemLogsApi(params)
     if (response.code === 200) {
       systemLogs.value = response.data.records
-      systemLogTotal.value = response.data.total
+      systemLogTotal.value = Number(response.data.total)
     } else {
       ElMessage.error('查询系统日志失败：' + response.message)
     }
@@ -366,12 +366,12 @@ const handleGetSystemLogs = async () => {
   }
 }
 
-const resetSystemLogForm = () => {
+const resetSystemLogForm = async () => {
   systemLogForm.operateBy = ''
   systemLogForm.operationType = ''
   systemLogForm.result = ''
-  systemLogs.value = []
-  systemLogTotal.value = 0
+  systemLogCurrentPage.value = 1 // 重置页码
+  await handleGetSystemLogs() // 调用查询函数刷新日志
 }
 
 const handleSystemLogPageChange = (page) => {

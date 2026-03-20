@@ -602,4 +602,14 @@ const handleChangePassword = async () => {
 .el-form--inline .el-form-item .el-select {
   width: 200px; /* 设置一个合适的固定宽度 */
 }
+
+/* 隐藏右上角的开关按钮 */
+body > .el-switch {
+  display: none !important;
+}
+
+/* 针对Element Plus主题切换开关的隐藏 */
+.el-theme-toggle {
+  display: none !important;
+}
 </style>

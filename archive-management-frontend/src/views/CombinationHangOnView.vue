@@ -262,17 +262,10 @@ const getSystemOptions = async () => {
     // 只获取启用状态的接口配置
     const response = await getInterfaceConfigsApi({ status: 1 })
     if (response.code === 200) {
-      // 从接口配置中提取唯一的业务系统作为目标系统选项
-      const systems = new Set()
-      response.data.records.forEach(config => {
-        if (config.businessSystem) {
-          systems.add(config.businessSystem)
-        }
-      })
-      // 将Set转换为选项数组，使用系统名作为标签和值
-      systemOptions.value = Array.from(systems).map(system => ({
-        label: system,
-        value: system
+      // 从接口配置中提取接口编码作为目标系统选项
+      systemOptions.value = response.data.records.map(config => ({
+        label: config.businessSystem,
+        value: config.interfaceCode
       }))
     }
   } catch (error) {
