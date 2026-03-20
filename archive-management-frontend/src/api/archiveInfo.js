@@ -38,7 +38,7 @@ export const previewArchiveApi = (id) => {
 export const openPreviewArchive = (archive) => {
   // 使用固定的后端地址，绕过前端路由拦截
   // 确保使用完整的后端地址，包括/archive前缀
-  const previewUrl = `http://localhost:8080/archive/info/preview?id=${archive.id}`
+  const previewUrl = `${import.meta.env.VITE_API_BASE_URL}/archive/info/preview?id=${archive.id}` 
   
   // 直接使用window.open打开预览链接，并指定窗口名称为文件名
   // 这种方式可以确保浏览器使用文件名作为窗口标题（至少在初始加载时）
