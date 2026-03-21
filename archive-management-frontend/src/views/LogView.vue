@@ -70,11 +70,11 @@
               </el-table>
 
               <el-pagination
-                :current-page="hangOnLogCurrentPage"
+                v-model:current-page="hangOnLogCurrentPage"
                 :page-size="pageSize"
                 :total="hangOnLogTotal"
-                layout="prev, pager, next, total"
-                @current-change="handleHangOnLogPageChange"
+                layout="prev, pager, next, sizes, jumper"
+                @update:current-page="handleHangOnLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />
             </div>
@@ -130,11 +130,11 @@
               </el-table>
 
               <el-pagination
-                :current-page="collectionLogCurrentPage"
+                v-model:current-page="collectionLogCurrentPage"
                 :page-size="pageSize"
                 :total="collectionLogTotal"
-                layout="prev, pager, next, total"
-                @current-change="handleCollectionLogPageChange"
+                layout="prev, pager, next, sizes, jumper"
+                @update:current-page="handleCollectionLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />
             </div>
@@ -184,11 +184,11 @@
               </el-table>
 
               <el-pagination
-                :current-page="systemLogCurrentPage"
+                v-model:current-page="systemLogCurrentPage"
                 :page-size="pageSize"
                 :total="systemLogTotal"
-                layout="prev, pager, next, total"
-                @current-change="handleSystemLogPageChange"
+                layout="prev, pager, next, sizes, jumper"
+                @update:current-page="handleSystemLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />
             </div>

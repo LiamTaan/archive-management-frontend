@@ -78,10 +78,12 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            layout="prev, pager, next"
-            :total="reportList.length"
-            :page-size="10"
-            @current-change="handleCurrentChange"
+            layout="prev, pager, next, sizes, jumper"
+            :total="total"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            @update:current-page="handleCurrentChange"
+            @update:page-size="handleSizeChange"
           ></el-pagination>
         </div>
       </div>
@@ -226,6 +228,9 @@ const queryParams = reactive({
 })
 
 const reportList = ref([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const generateDialogVisible = ref(false)
 const viewDialogVisible = ref(false)
 const generateFormRef = ref(null)
@@ -257,14 +262,16 @@ const generateFormRules = reactive({
 const initData = () => {
   // 调用API获取审计报表列表
   auditReportApi.getAuditReportList({
-    currentPage: 1,
-    pageSize: 10
+    currentPage: currentPage.value,
+    pageSize: pageSize.value
   }).then(res => {
     reportList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = res.data?.total || 0
   }).catch(err => {
     console.error('获取审计报表列表失败:', err)
     ElMessage.error('获取审计报表列表失败')
     reportList.value = []
+    total.value = 0
   })
 }
 
@@ -316,18 +323,21 @@ const formatFileSize = (size) => {
 
 // 查询
 const handleQuery = () => {
+  currentPage.value = 1
   // 调用API获取审计报表列表
   auditReportApi.getAuditReportList({
-    currentPage: 1,
-    pageSize: 10,
+    currentPage: currentPage.value,
+    pageSize: pageSize.value,
     ...queryParams
   }).then(res => {
     reportList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = res.data?.total || 0
     ElMessage.success('查询成功')
   }).catch(err => {
     console.error('查询审计报表失败:', err)
     ElMessage.error('查询审计报表失败')
     reportList.value = []
+    total.value = 0
   })
 }
 
@@ -343,11 +353,12 @@ const handleReset = () => {
 }
 
 // 分页
-const handleCurrentChange = (currentPage) => {
+const handleCurrentChange = (page) => {
+  currentPage.value = page
   // 调用API获取指定页码的审计报表列表
   auditReportApi.getAuditReportList({
-    currentPage: currentPage,
-    pageSize: 10,
+    currentPage: currentPage.value,
+    pageSize: pageSize.value,
     ...queryParams
   }).then(res => {
     reportList.value = Array.isArray(res.data?.records) ? res.data.records : []
@@ -356,6 +367,13 @@ const handleCurrentChange = (currentPage) => {
     ElMessage.error('获取审计报表列表失败')
     reportList.value = []
   })
+}
+
+// 处理每页条数变化
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
+  initData()
 }
 
 // 生成报表

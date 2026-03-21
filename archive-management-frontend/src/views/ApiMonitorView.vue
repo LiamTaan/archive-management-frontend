@@ -94,12 +94,12 @@
           <!-- 分页 -->
             <div class="pagination-container">
               <el-pagination
-                layout="prev, pager, next, total"
+                layout="prev, pager, next, sizes, jumper"
                 :total="total"
-                :page-size="pageSize"
-                :current-page="currentPage"
-                @current-change="handleCurrentChange"
-                @size-change="handleSizeChange"
+                v-model:page-size="pageSize"
+                v-model:current-page="currentPage"
+                @update:current-page="handleCurrentChange"
+                @update:page-size="handleSizeChange"
               ></el-pagination>
             </div>
         </el-card>

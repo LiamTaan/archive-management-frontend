@@ -76,11 +76,11 @@
 
       <!-- 分页 -->
       <el-pagination
-        :current-page="currentPage"
+        v-model:current-page="currentPage"
         :page-size="pageSize"
         :total="total"
-        layout="prev, pager, next, total"
-        @current-change="handlePageChange"
+        layout="prev, pager, next, sizes, jumper"
+        @update:current-page="handlePageChange"
         style="margin-top: 20px; text-align: right;"
       />
 

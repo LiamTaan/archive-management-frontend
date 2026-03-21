@@ -176,11 +176,11 @@
 
               <el-pagination
                 v-if="logTotal > 0"
-                :current-page="currentPage"
+                v-model:current-page="currentPage"
                 :page-size="pageSize"
                 :total="logTotal"
-                layout="prev, pager, next, total"
-                @current-change="handlePageChange"
+                layout="prev, pager, next, sizes, jumper"
+                @update:current-page="handlePageChange"
                 style="margin-top: 20px; text-align: right;"
                 :loading="logsLoading"
               />

@@ -81,8 +81,8 @@
             layout="prev, pager, next"
             :total="total"
             :page-size="pageSize"
-            :current-page="page"
-            @current-change="handleCurrentChange"
+            v-model:current-page="page"
+            @update:current-page="handleCurrentChange"
           ></el-pagination>
         </div>
       </div>

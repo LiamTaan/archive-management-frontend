@@ -55,13 +55,13 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            layout="prev, pager, next, total, jumper"
+            layout="prev, pager, next, sizes, jumper"
             :total="total"
-            :current-page="currentPage"
-            :page-size="pageSize"
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
             :page-sizes="[10, 20, 50, 100]"
-            @current-change="handleCurrentChange"
-            @size-change="handleSizeChange"
+            @update:current-page="handleCurrentChange"
+            @update:page-size="handleSizeChange"
           ></el-pagination>
         </div>
       </div>
