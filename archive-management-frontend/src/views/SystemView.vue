@@ -53,10 +53,11 @@
             <el-pagination
               v-if="interfaceTotal > 0"
               v-model:current-page="currentPage"
-              :page-size="pageSize"
+              v-model:page-size="pageSize"
               :total="interfaceTotal"
               layout="prev, pager, next, sizes, jumper"
               @update:current-page="handlePageChange"
+              @update:page-size="handleSizeChange"
               style="margin-top: 20px; text-align: right;"
             />
 
@@ -329,6 +330,12 @@ const handleStatusChange = async (row) => {
 
 const handlePageChange = (page) => {
   currentPage.value = page
+  getInterfaces()
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
   getInterfaces()
 }
 

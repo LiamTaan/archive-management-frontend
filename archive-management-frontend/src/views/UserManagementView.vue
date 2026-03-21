@@ -77,10 +77,11 @@
       <!-- 分页 -->
       <el-pagination
         v-model:current-page="currentPage"
-        :page-size="pageSize"
+        v-model:page-size="pageSize"
         :total="total"
         layout="prev, pager, next, sizes, jumper"
         @update:current-page="handlePageChange"
+        @update:page-size="handleSizeChange"
         style="margin-top: 20px; text-align: right;"
       />
 
@@ -308,6 +309,13 @@ const resetSearch = () => {
 // 分页
 const handlePageChange = (page) => {
   currentPage.value = page
+  getUsers()
+}
+
+// 处理每页条数变化
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
   getUsers()
 }
 
