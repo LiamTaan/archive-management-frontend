@@ -40,7 +40,15 @@ service.interceptors.response.use(
     const res = response.data
     // 如果响应不是200，说明请求失败
     if (res.code !== 200) {
-      ElMessage.error(res.message || '请求失败')
+      // 处理业务层面的认证失败
+        if (res.code === 401 || res.code === 403) {
+          // 不显示错误信息，直接跳转登录页
+          localStorage.removeItem('token')
+          localStorage.removeItem('userInfo')
+          router.push('/login')
+        } else {
+          ElMessage.error(res.message || '请求失败')
+        }
       return Promise.reject(new Error(res.message || '请求失败'))
     } else {
       // 缓存GET请求结果
@@ -58,23 +66,17 @@ service.interceptors.response.use(
   error => {
     console.error('响应错误:', error)
     if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          // Token过期或无效，跳转到登录页
-          ElMessage.error('登录已过期，请重新登录')
-          localStorage.removeItem('token')
-          localStorage.removeItem('userInfo')
-          router.push('/login')
-          break
-        case 403:
-          ElMessage.error('没有权限访问该资源')
-          break
-        case 500:
-          ElMessage.error('服务器内部错误')
-          break
-        default:
-          ElMessage.error(error.response.data?.message || '请求失败')
-      }
+    // 处理HTTP状态码层面的认证失败
+    if (error.response.status === 401 || error.response.status === 403) {
+      // 不显示错误信息，直接跳转登录页
+      localStorage.removeItem('token')
+      localStorage.removeItem('userInfo')
+      router.push('/login')
+    } else if (error.response.status === 500) {
+      ElMessage.error('服务器内部错误')
+    } else {
+      ElMessage.error(error.response.data?.message || '请求失败')
+    }
     } else if (error.request) {
       ElMessage.error('网络错误，请稍后重试')
     } else {

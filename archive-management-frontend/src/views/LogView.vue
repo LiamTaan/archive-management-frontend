@@ -73,7 +73,7 @@
                 v-model:current-page="hangOnLogCurrentPage"
                 :page-size="pageSize"
                 :total="hangOnLogTotal"
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 @update:current-page="handleHangOnLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />
@@ -133,7 +133,7 @@
                 v-model:current-page="collectionLogCurrentPage"
                 :page-size="pageSize"
                 :total="collectionLogTotal"
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 @update:current-page="handleCollectionLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />
@@ -187,7 +187,7 @@
                 v-model:current-page="systemLogCurrentPage"
                 :page-size="pageSize"
                 :total="systemLogTotal"
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 @update:current-page="handleSystemLogPageChange"
                 style="margin-top: 20px; text-align: right;"
               />

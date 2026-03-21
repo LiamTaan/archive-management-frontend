@@ -94,12 +94,11 @@
           <!-- 分页 -->
             <div class="pagination-container">
               <el-pagination
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 :total="total"
-                v-model:page-size="pageSize"
+                :page-size="pageSize"
                 v-model:current-page="currentPage"
                 @update:current-page="handleCurrentChange"
-                @update:page-size="handleSizeChange"
               ></el-pagination>
             </div>
         </el-card>
@@ -154,7 +153,7 @@ const initData = async () => {
     })
     if (detailsResponse.code === 200) {
       apiDetails.value = detailsResponse.data.records || []
-      total.value = detailsResponse.data.total || 0
+      total.value = Number(detailsResponse.data.total) || 0
     }
     
     ElMessage.success('数据加载成功')

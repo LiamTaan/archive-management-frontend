@@ -13,6 +13,9 @@
 
       <!-- 搜索表单 -->
       <el-form :model="searchForm" label-width="80px" :inline="true" style="margin-bottom: 20px;">
+        <el-form-item label="角色编码">
+          <el-input v-model="searchForm.roleCode" placeholder="请输入角色编码" clearable />
+        </el-form-item>
         <el-form-item label="角色名称">
           <el-input v-model="searchForm.roleName" placeholder="请输入角色名称" clearable />
         </el-form-item>
@@ -31,6 +34,7 @@
       <!-- 角色列表 -->
       <el-table :data="roles" border style="width: 100%">
         <el-table-column prop="roleId" label="角色ID" width="100" />
+        <el-table-column prop="roleCode" label="角色编码" width="150" />
         <el-table-column prop="roleName" label="角色名称" width="150" />
         <el-table-column prop="roleDesc" label="角色描述" />
         <el-table-column prop="status" label="状态" width="100">
@@ -72,17 +76,19 @@
       <!-- 分页 -->
       <el-pagination
         v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
+        :page-size="pageSize"
         :total="total"
-        layout="prev, pager, next, sizes, jumper"
+        layout="prev, pager, next"
         @update:current-page="handlePageChange"
-        @update:page-size="handleSizeChange"
         style="margin-top: 20px; text-align: right;"
       />
 
       <!-- 新增/编辑角色对话框 -->
       <el-dialog v-model="roleDialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="50%">
         <el-form :model="roleForm" :rules="roleRules" ref="roleFormRef" label-width="100px">
+          <el-form-item label="角色编码" prop="roleCode">
+            <el-input v-model="roleForm.roleCode" placeholder="请输入角色编码" />
+          </el-form-item>
           <el-form-item label="角色名称" prop="roleName">
             <el-input v-model="roleForm.roleName" placeholder="请输入角色名称" />
           </el-form-item>
@@ -145,6 +151,7 @@ import { transformPageRequest, transformPageResponse } from '../utils/pagination
 // 搜索表单
 const searchForm = reactive({
   roleName: '',
+  roleCode: '',
   status: ''
 })
 
@@ -161,6 +168,7 @@ const isEdit = ref(false)
 const roleFormRef = ref(null)
 const roleForm = reactive({
   roleId: '',
+  roleCode: '',
   roleName: '',
   roleDesc: '',
   status: '1'
@@ -177,6 +185,10 @@ const permissionTreeProps = {
 
 // 表单验证规则
 const roleRules = {
+  roleCode: [
+    { required: true, message: '请输入角色编码', trigger: 'blur' },
+    { min: 2, max: 30, message: '角色编码长度在 2 到 30 个字符', trigger: 'blur' }
+  ],
   roleName: [
     { required: true, message: '请输入角色名称', trigger: 'blur' },
     { min: 2, max: 20, message: '角色名称长度在 2 到 20 个字符', trigger: 'blur' }

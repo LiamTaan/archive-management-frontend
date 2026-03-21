@@ -94,7 +94,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getUserMenusApi } from './api/menu'
@@ -108,8 +108,19 @@ import {
 const router = useRouter()
 const activeMenu = ref('collection')
 const menus = ref([])
-const isLoggedIn = ref(false)
 const userInfo = ref({})
+
+// 响应式获取登录状态
+const isLoggedIn = computed(() => {
+  const token = localStorage.getItem('token')
+  return !!token
+})
+
+// 初始加载用户信息
+const userInfoStr = localStorage.getItem('userInfo')
+if (userInfoStr) {
+  userInfo.value = JSON.parse(userInfoStr)
+}
 
 // 修改密码对话框
 const changePasswordDialogVisible = ref(false)
@@ -153,30 +164,12 @@ const iconMap = {
   Lock
 }
 
-// 初始化系统
-onMounted(() => {
-  // 检查用户是否已登录
-  const token = localStorage.getItem('token')
-  if (token) {
-    isLoggedIn.value = true
-    // 获取用户信息
-    const userInfoStr = localStorage.getItem('userInfo')
-    if (userInfoStr) {
-      userInfo.value = JSON.parse(userInfoStr)
-    }
-    // 获取菜单列表
-    getMenus()
-    // 设置初始激活菜单
-    setActiveMenu()
-  } else {
-    // 未登录，跳转到登录页
-    router.push('/login')
-  }
-})
-
 // 获取菜单列表
 const getMenus = async () => {
   try {
+    // 在发送请求之前再次检查登录状态
+    if (!isLoggedIn.value) return
+    
     // 调用后端API获取菜单列表
     const response = await getUserMenusApi()
     // 将后端返回的菜单数据转换为前端需要的格式
@@ -203,6 +196,11 @@ const getMenus = async () => {
       })
     }
   } catch (error) {
+    // 检查错误类型，如果是认证失败，则不显示错误信息，因为用户可能已经退出登录
+    if (error.message && (error.message.includes('401') || error.message.includes('403') || error.message.includes('登录已过期'))) {
+      return
+    }
+    // 其他错误才显示错误信息
     ElMessage.error('获取菜单列表失败：' + error.message)
     // 如果API调用失败，使用备用的模拟数据
     menus.value = [
@@ -355,6 +353,34 @@ const setActiveMenu = () => {
   }
 }
 
+// 初始化系统
+onMounted(() => {
+  if (isLoggedIn.value) {
+    // 获取菜单列表
+    getMenus()
+    // 设置初始激活菜单
+    setActiveMenu()
+  }
+})
+
+// 监听登录状态变化，确保路由正确
+watch(isLoggedIn, (newVal) => {
+  if (newVal) {
+    // 已登录，如果当前路由是登录页，跳转到首页
+    if (router.currentRoute.value.path === '/login') {
+      router.push('/home')
+    }
+    // 获取菜单列表和设置激活菜单
+    getMenus()
+    setActiveMenu()
+  } else {
+    // 未登录，跳转到登录页
+    if (router.currentRoute.value.path !== '/login') {
+      router.push('/login')
+    }
+  }
+}, { immediate: true })
+
 // 菜单选择事件
 const handleMenuSelect = (key, keyPath) => {
   activeMenu.value = key
@@ -386,11 +412,12 @@ const handleLogout = async () => {
     // 清除本地存储
     localStorage.removeItem('token')
     localStorage.removeItem('userInfo')
-    isLoggedIn.value = false
+    // 重置相关状态
     menus.value = []
     userInfo.value = {}
-    // 跳转到登录页
+    // 跳转到登录页并刷新页面
     router.push('/login')
+    window.location.reload()
     ElMessage.success('退出登录成功')
   } catch (error) {
     ElMessage.error('退出登录失败：' + error.message)

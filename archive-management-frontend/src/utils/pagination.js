@@ -25,9 +25,9 @@ export const transformPageRequest = (params) => {
 export const transformPageResponse = (pageResult) => {
   return {
     records: pageResult.list || [],
-    total: pageResult.total || 0,
-    current: pageResult.pageNum || 1,
-    size: pageResult.pageSize || 10,
-    pages: pageResult.totalPages || 0
+    total: Number(pageResult.total) || 0,
+    current: Number(pageResult.pageNum) || 1,
+    size: Number(pageResult.pageSize) || 10,
+    pages: Number(pageResult.totalPages) || 0
   }
 }

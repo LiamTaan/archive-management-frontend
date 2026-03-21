@@ -165,11 +165,10 @@
               <!-- 分页 -->
               <el-pagination
                 v-model:current-page="currentPage"
-                v-model:page-size="pageSize"
+                :page-size="pageSize"
                 :total="total"
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 @update:current-page="handlePageChange"
-                @update:page-size="handleSizeChange"
                 style="margin-top: 20px; text-align: right;"
               />
             </div>

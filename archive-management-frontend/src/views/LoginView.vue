@@ -78,12 +78,8 @@ const handleLogin = async () => {
           localStorage.setItem('userInfo', JSON.stringify(response.data.user))
           
           ElMessage.success('登录成功')
-          // 跳转到首页并强制刷新，确保App.vue的onMounted钩子执行，更新isLoggedIn状态
-          router.push('/home')
-          // 强制刷新页面，确保顶栏和菜单正常显示
-          setTimeout(() => {
-            window.location.reload()
-          }, 100)
+          // 先跳转到首页，然后刷新页面
+          window.location.href = '/home'
         } else {
           ElMessage.error('登录失败：' + response.message)
         }

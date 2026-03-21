@@ -146,9 +146,15 @@ const router = createRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  // 检查路由是否需要认证
-  if (to.meta.requiresAuth !== false) {
-    // 需要认证，检查用户是否已登录
+  // 设置页面标题
+  document.title = to.path === '/login' ? '登录 - 电子档案管理系统' : '电子档案管理系统'
+  
+  // 只有登录页不需要认证，其他所有页面都需要认证
+  if (to.path === '/login') {
+    // 登录页，直接访问
+    next()
+  } else {
+    // 其他页面都需要认证，检查用户是否已登录
     const token = localStorage.getItem('token')
     if (token) {
       // 已登录，继续访问
@@ -157,9 +163,6 @@ router.beforeEach((to, from, next) => {
       // 未登录，跳转到登录页
       next('/login')
     }
-  } else {
-    // 不需要认证，直接访问
-    next()
   }
 })
 

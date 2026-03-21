@@ -78,12 +78,11 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            layout="prev, pager, next, sizes, jumper"
+            layout="prev, pager, next"
             :total="total"
-            v-model:page-size="pageSize"
+            :page-size="pageSize"
             v-model:current-page="page"
             @update:current-page="handleCurrentChange"
-            @update:page-size="handleSizeChange"
           ></el-pagination>
         </div>
       </div>
@@ -164,7 +163,7 @@ const fetchNotifications = async () => {
     }
     const response = await getNotifications(params)
     notifications.value = response.data.list
-    total.value = response.data.total
+    total.value = Number(response.data.total) || 0
   } catch (error) {
     console.error('获取通知列表失败:', error)
   } finally {

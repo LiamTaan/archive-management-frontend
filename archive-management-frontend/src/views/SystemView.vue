@@ -53,11 +53,10 @@
             <el-pagination
               v-if="interfaceTotal > 0"
               v-model:current-page="currentPage"
-              v-model:page-size="pageSize"
+              :page-size="pageSize"
               :total="interfaceTotal"
-              layout="prev, pager, next, sizes, jumper"
+              layout="prev, pager, next"
               @update:current-page="handlePageChange"
-              @update:page-size="handleSizeChange"
               style="margin-top: 20px; text-align: right;"
             />
 
@@ -237,7 +236,7 @@ const getInterfaces = async () => {
     const response = await getInterfaceConfigsApi(params)
     if (response.code === 200) {
       interfaces.value = response.data.records
-      interfaceTotal.value = response.data.total
+      interfaceTotal.value = Number(response.data.total) || 0
       ElMessage.success('获取接口配置成功')
     } else {
       ElMessage.error('获取接口配置失败：' + response.message)

@@ -78,12 +78,11 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            layout="prev, pager, next, sizes, jumper"
+            layout="prev, pager, next"
             :total="total"
+            :page-size="pageSize"
             v-model:current-page="currentPage"
-            v-model:page-size="pageSize"
             @update:current-page="handleCurrentChange"
-            @update:page-size="handleSizeChange"
           ></el-pagination>
         </div>
       </div>
@@ -266,7 +265,7 @@ const initData = () => {
     pageSize: pageSize.value
   }).then(res => {
     reportList.value = Array.isArray(res.data?.records) ? res.data.records : []
-    total.value = res.data?.total || 0
+    total.value = Number(res.data?.total) || 0
   }).catch(err => {
     console.error('获取审计报表列表失败:', err)
     ElMessage.error('获取审计报表列表失败')

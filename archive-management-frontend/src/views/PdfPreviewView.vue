@@ -17,7 +17,7 @@
               v-model:current-page="currentPage"
               :page-size="1"
               :total="previewInfo.params.totalPages"
-              layout="prev, pager, next, jumper"
+              layout="prev, pager, next"
               @update:current-page="handlePageChange"
             />
           </div>

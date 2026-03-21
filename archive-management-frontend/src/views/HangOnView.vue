@@ -177,11 +177,10 @@
               <el-pagination
                 v-if="logTotal > 0"
                 v-model:current-page="currentPage"
-                v-model:page-size="pageSize"
+                :page-size="pageSize"
                 :total="logTotal"
-                layout="prev, pager, next, sizes, jumper"
+                layout="prev, pager, next"
                 @update:current-page="handlePageChange"
-                @update:page-size="handleSizeChange"
                 style="margin-top: 20px; text-align: right;"
                 :loading="logsLoading"
               />
@@ -483,7 +482,7 @@ const handleGetLogs = async () => {
     const response = await getLogsApi(params)
     if (response.code === 200) {
       logs.value = response.data.records
-      logTotal.value = response.data.total
+      logTotal.value = Number(response.data.total) || 0
       ElMessage.success('查询挂接日志成功')
     } else {
       ElMessage.error('查询挂接日志失败：' + response.message)
