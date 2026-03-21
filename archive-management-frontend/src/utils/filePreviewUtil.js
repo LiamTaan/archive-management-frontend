@@ -108,11 +108,29 @@ class LargeFilePreviewer {
    */
   async openPreview(archive) {
     try {
-      // 先检查文件扩展名，直接判断文件类型，避免后端返回错误的previewType导致无限轮询
+      // 检查文件大小，对于超大文件给出提示
+      const fileSize = archive.fileSize || 0
       const fileName = archive.fileName || ''
+      
+      // 大文件阈值（50MB）
+      const largeFileThreshold = 50 * 1024 * 1024 // 50MB
+      
+      // 先检查文件扩展名，直接判断文件类型
       const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
       
-      // 如果是PDF文件，直接使用PDF预览方式，不依赖后端返回的previewType
+      // 如果是Office文件且文件太大，只给出提示，不进行预览
+      const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'vsd', 'dwg']
+      if (officeExtensions.includes(fileExtension) && fileSize > largeFileThreshold) {
+        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，该类型文件过大，只能下载查看`)
+        return
+      }
+      
+      // 其他文件类型的大文件提示
+      if (fileSize > largeFileThreshold) {
+        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，建议直接下载后查看，可能需要较长时间加载`)
+      }
+      
+      // 如果是PDF文件，直接使用PDF预览方式
       if (fileExtension === 'pdf') {
         this.openPdfPreview(archive.id, fileName)
         return
@@ -132,34 +150,16 @@ class LargeFilePreviewer {
         return
       }
       
-      // 其他文件类型，再调用后端接口获取预览信息
-      this.isPreviewing = true
-      const previewInfo = await this.initPreview(archive.id)
-      
-      // 根据预览类型选择预览方式
-      switch (previewInfo.previewType) {
-        case 'pdf':
-          this.openPdfPreview(archive.id, fileName)
-          break
-        case 'video':
-          this.openVideoPreview(archive.id, fileName)
-          break
-        case 'image':
-          this.openImagePreview(archive)
-          break
-        case 'office':
-          // 等待转换完成后预览PDF
-          this.waitForConvertAndPreview(archive)
-          break
-        default:
-          // 使用传统方式预览
-          this.openTraditionalPreview(archive)
-          this.isPreviewing = false
-          break
+      // 如果是Office文件，直接使用传统预览方式
+      if (officeExtensions.includes(fileExtension)) {
+        this.openTraditionalPreview(archive)
+        return
       }
+      
+      // 其他文件类型，使用传统预览方式
+      this.openTraditionalPreview(archive)
     } catch (error) {
       ElMessage.error('预览失败: ' + error.message)
-      this.isPreviewing = false
     }
   }
 
