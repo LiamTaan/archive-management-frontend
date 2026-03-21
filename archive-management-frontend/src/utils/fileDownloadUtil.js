@@ -25,6 +25,9 @@ class LargeFileDownloader {
    * @param {Function} completeCallback 完成回调
    */
   async initDownload(fileId, progressCallback, completeCallback) {
+    // 重置下载状态
+    this.reset()
+    
     this.progressCallback = progressCallback
     this.completeCallback = completeCallback
     

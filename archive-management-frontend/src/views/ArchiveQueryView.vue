@@ -99,6 +99,22 @@
                     />
                   </el-form-item>
                 </el-col>
+                <el-col :span="8" v-if="isExpanded || activeVisibleFields.includes('fileSize')">
+                  <el-form-item label="文件大小范围">
+                    <el-input-number
+                      v-model="queryForm.minFileSize"
+                      :min="0"
+                      placeholder="最小(KB)"
+                      style="width: 45%; margin-right: 10%"
+                    />
+                    <el-input-number
+                      v-model="queryForm.maxFileSize"
+                      :min="0"
+                      placeholder="最大(KB)"
+                      style="width: 45%"
+                    />
+                  </el-form-item>
+                </el-col>
               </el-row>
               <el-form-item>
                 <el-button type="primary" @click="handleQuery" :loading="loading">开始查询</el-button>
@@ -130,6 +146,11 @@
                 <el-table-column prop="id" label="档案ID" width="100" />
                 <el-table-column prop="fileName" label="文件名" width="300" />
                 <el-table-column prop="fileType" label="文件类型" width="100" />
+                <el-table-column label="文件大小" width="120">
+                  <template #default="scope">
+                    {{ formatFileSize(scope.row.fileSize) }}
+                  </template>
+                </el-table-column>
                 <el-table-column prop="archiveType" label="档案分类" width="120" />
                 <el-table-column prop="businessNo" label="业务单号" width="150" />
                 <el-table-column prop="responsiblePerson" label="责任人" width="100" />
@@ -267,7 +288,9 @@ const queryForm = reactive({
   status: '',
   hangOnType: '',
   startTime: '',
-  endTime: ''
+  endTime: '',
+  minFileSize: '',
+  maxFileSize: ''
 })
 
 // 日期范围
@@ -345,6 +368,14 @@ const handleQuery = async () => {
       queryDTO.endTime = new Date(dateRange.value[1])
     }
     
+    // 处理文件大小范围（前端输入的是KB，转换为字节）
+    if (queryForm.minFileSize) {
+      queryDTO.minFileSize = parseInt(queryForm.minFileSize) * 1024
+    }
+    if (queryForm.maxFileSize) {
+      queryDTO.maxFileSize = parseInt(queryForm.maxFileSize) * 1024
+    }
+    
     // 调用API
     const response = await queryArchiveByPageApi(queryDTO)
     const pageData = transformPageResponse(response.data)
@@ -361,12 +392,17 @@ const handleQuery = async () => {
 // 重置查询条件
 const resetQueryForm = () => {
   Object.keys(queryForm).forEach(key => {
-    queryForm[key] = ''
+    // 对于数字类型的字段，重置为null或0，而不是空字符串
+    if (key === 'minFileSize' || key === 'maxFileSize' || key === 'status' || key === 'hangOnType') {
+      queryForm[key] = null
+    } else {
+      queryForm[key] = ''
+    }
   })
   dateRange.value = []
-  tableData.value = []
-  total.value = 0
   currentPage.value = 1
+  // 重置后自动执行查询，保持列表显示
+  handleQuery()
 }
 
 // 查看详情

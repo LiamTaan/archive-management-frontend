@@ -73,13 +73,39 @@
             </el-upload>
 
             <el-form :model="manualForm" label-width="120px" style="margin-top: 20px;">
-              <el-form-item label="档案类型">
-                <el-select v-model="manualForm.archiveType" placeholder="请选择档案类型">
-                  <el-option label="文书档案" value="1" />
-                  <el-option label="科技档案" value="2" />
-                  <el-option label="会计档案" value="3" />
-                </el-select>
-              </el-form-item>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="档案类型">
+                    <el-select v-model="manualForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="12">
+                  <el-form-item label="业务类型">
+                    <el-input v-model="manualForm.businessType" placeholder="请输入业务类型" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="责任人">
+                    <el-input v-model="manualForm.responsiblePerson" placeholder="请输入责任人" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="所属部门">
+                    <el-input v-model="manualForm.department" placeholder="请输入所属部门" />
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="24">
+                  <el-form-item label="备注">
+                    <el-input v-model="manualForm.remark" type="textarea" placeholder="请输入备注信息" :rows="3" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
               <el-form-item>
                 <el-button type="primary" @click="handleManualUpload" :disabled="manualFiles.length === 0">上传采集</el-button>
                 <el-button @click="resetManualForm">重置</el-button>
@@ -132,13 +158,39 @@
             </el-upload>
 
             <el-form :model="batchForm" label-width="120px" style="margin-top: 20px;">
-              <el-form-item label="档案类型">
-                <el-select v-model="batchForm.archiveType" placeholder="请选择档案类型">
-                  <el-option label="文书档案" value="1" />
-                  <el-option label="科技档案" value="2" />
-                  <el-option label="会计档案" value="3" />
-                </el-select>
-              </el-form-item>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="档案类型">
+                    <el-select v-model="batchForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="12">
+                  <el-form-item label="业务类型">
+                    <el-input v-model="batchForm.businessType" placeholder="请输入业务类型" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="责任人">
+                    <el-input v-model="batchForm.responsiblePerson" placeholder="请输入责任人" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="所属部门">
+                    <el-input v-model="batchForm.department" placeholder="请输入所属部门" />
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="24">
+                  <el-form-item label="备注">
+                    <el-input v-model="batchForm.remark" type="textarea" placeholder="请输入备注信息" :rows="3" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
               <el-form-item>
                 <el-button type="primary" @click="handleBatchUpload" :disabled="batchFiles.length === 0">批量上传</el-button>
                 <el-button @click="resetBatchForm">重置</el-button>
@@ -191,13 +243,39 @@
                   </template>
                 </el-upload>
               </el-form-item>
-              <el-form-item label="档案类型">
-                <el-select v-model="externalForm.archiveType" placeholder="请选择档案类型">
-                  <el-option label="文书档案" value="1" />
-                  <el-option label="科技档案" value="2" />
-                  <el-option label="会计档案" value="3" />
-                </el-select>
-              </el-form-item>
+              <el-row :gutter="20">
+                <el-col :span="12">
+                  <el-form-item label="档案类型">
+                    <el-select v-model="externalForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="12">
+                  <el-form-item label="业务类型">
+                    <el-input v-model="externalForm.businessType" placeholder="请输入业务类型" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="责任人">
+                    <el-input v-model="externalForm.responsiblePerson" placeholder="请输入责任人" />
+                  </el-form-item>
+                </el-col>
+                <el-col :span="12">
+                  <el-form-item label="所属部门">
+                    <el-input v-model="externalForm.department" placeholder="请输入所属部门" />
+                  </el-form-item>
+                </el-col>
+
+                <el-col :span="24">
+                  <el-form-item label="备注">
+                    <el-input v-model="externalForm.remark" type="textarea" placeholder="请输入备注信息" :rows="3" />
+                  </el-form-item>
+                </el-col>
+              </el-row>
               <el-form-item>
                 <el-button type="primary" @click="handleExternalImport" :disabled="externalFiles.length === 0">开始导入</el-button>
                 <el-button @click="resetExternalForm">重置</el-button>
@@ -432,7 +510,11 @@ const resetAutoForm = () => {
 
 // 手动上传
 const manualForm = reactive({
-  archiveType: ''
+  archiveType: '',
+  businessType: '',
+  responsiblePerson: '',
+  department: '',
+  remark: ''
 })
 
 const manualFiles = ref([])
@@ -458,7 +540,15 @@ const handleManualUpload = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', manualForm.archiveType)
-    formData.append('metadata', '{"title":"手动上传测试","author":"user"}')
+    // 构建metadata对象，包含所有表单字段
+    const metadata = {
+      businessType: manualForm.businessType,
+      responsiblePerson: manualForm.responsiblePerson,
+      department: manualForm.department,
+      remark: manualForm.remark,
+      author: 'user'
+    }
+    formData.append('metadata', JSON.stringify(metadata))
     formData.append('operateBy', 'user')
     // 添加文件
     manualFiles.value.forEach(fileItem => {
@@ -506,7 +596,11 @@ const resetManualForm = () => {
 
 // 批量上传
 const batchForm = reactive({
-  archiveType: ''
+  archiveType: '',
+  businessType: '',
+  responsiblePerson: '',
+  department: '',
+  remark: ''
 })
 
 const batchFiles = ref([])
@@ -532,7 +626,15 @@ const handleBatchUpload = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', batchForm.archiveType)
-    formData.append('metadata', '{"title":"批量上传测试","author":"user"}')
+    // 构建metadata对象，包含所有表单字段
+    const metadata = {
+      businessType: batchForm.businessType,
+      responsiblePerson: batchForm.responsiblePerson,
+      department: batchForm.department,
+      remark: batchForm.remark,
+      author: 'user'
+    }
+    formData.append('metadata', JSON.stringify(metadata))
     formData.append('operateBy', 'user')
     // 添加文件
     batchFiles.value.forEach(fileItem => {
@@ -580,7 +682,11 @@ const resetBatchForm = () => {
 
 // 外部导入
 const externalForm = reactive({
-  archiveType: ''
+  archiveType: '',
+  businessType: '',
+  responsiblePerson: '',
+  department: '',
+  remark: ''
 })
 
 const externalFiles = ref([])
@@ -606,7 +712,15 @@ const handleExternalImport = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', externalForm.archiveType)
-    formData.append('metadata', '{"title":"外部导入测试","author":"user"}')
+    // 构建metadata对象，包含所有表单字段
+    const metadata = {
+      businessType: externalForm.businessType,
+      responsiblePerson: externalForm.responsiblePerson,
+      department: externalForm.department,
+      remark: externalForm.remark,
+      author: 'user'
+    }
+    formData.append('metadata', JSON.stringify(metadata))
     formData.append('operateBy', 'user')
     // 添加文件
     externalFiles.value.forEach(fileItem => {

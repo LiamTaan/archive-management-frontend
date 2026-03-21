@@ -370,10 +370,10 @@ const handleGetRelations = async () => {
     relationsLoading.value = false
   }
 }
-
+// 挂接关系查询
 const resetRelationForm = () => {
   relationForm.archiveId = ''
-  relations.value = []
+  // 重置后不清空列表，保持现有数据显示
 }
 
 // 修改挂接关系对话框
@@ -493,13 +493,14 @@ const handleGetLogs = async () => {
     logsLoading.value = false
   }
 }
-
+// 挂接日志查询
 const resetLogForm = () => {
   logForm.archiveId = ''
   logForm.hangOnType = ''
   logForm.result = ''
-  logs.value = []
-  logTotal.value = 0
+  currentPage.value = 1
+  // 重置后自动执行查询，保持列表显示
+  handleGetLogs()
 }
 
 const handlePageChange = (page) => {

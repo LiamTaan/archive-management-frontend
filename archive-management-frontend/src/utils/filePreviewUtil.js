@@ -22,7 +22,8 @@ class FilePreviewer {
       const fileSize = archive.fileSize || 0 // 文件大小（字节）
       
       // 先检查文件大小，大文件（>10MB）直接提示下载
-      const maxPreviewSize = 10 * 1024 * 1024 // 10MB
+      const maxPreviewSize = 20 * 1024 * 1024 // 10MB
+      // 如果fileSize为0或未定义，仍然允许预览，由浏览器处理
       if (fileSize > maxPreviewSize) {
         ElMessage.warning(`文件较大（${(fileSize / 1024 / 1024).toFixed(2)}MB），建议直接下载查看`)
         return
