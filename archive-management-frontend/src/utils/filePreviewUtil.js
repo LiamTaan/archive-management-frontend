@@ -155,8 +155,8 @@ class LargeFilePreviewer {
    */
   openPdfPreview(fileId, fileName) {
     // 在新标签页中打开系统内部的PDF预览页面，共享登录状态
-    const previewUrl = `${window.location.origin}/#/pdf-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
-    window.open(previewUrl, fileName, 'width=1000,height=800')
+    const previewUrl = `${window.location.origin}/pdf-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    window.open(previewUrl, '_blank')
   }
 
   /**
@@ -166,8 +166,8 @@ class LargeFilePreviewer {
    */
   openVideoPreview(fileId, fileName) {
     // 在新标签页中打开系统内部的视频预览页面，共享登录状态
-    const previewUrl = `${window.location.origin}/#/video-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
-    window.open(previewUrl, fileName, 'width=1000,height=800')
+    const previewUrl = `${window.location.origin}/video-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    window.open(previewUrl, '_blank')
   }
 
   /**
@@ -185,8 +185,8 @@ class LargeFilePreviewer {
    */
   openTraditionalPreview(archive) {
     // 使用PDF预览页面作为默认预览方式，在新标签页中打开
-    const previewUrl = `${window.location.origin}/#/pdf-preview?id=${archive.id}&fileName=${encodeURIComponent(archive.fileName)}`
-    window.open(previewUrl, archive.fileName, 'width=1000,height=800')
+    const previewUrl = `${window.location.origin}/pdf-preview?id=${archive.id}&fileName=${encodeURIComponent(archive.fileName)}`
+    window.open(previewUrl, '_blank')
   }
 
   /**
