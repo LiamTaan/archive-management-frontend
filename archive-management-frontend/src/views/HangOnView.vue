@@ -177,10 +177,11 @@
               <el-pagination
                 v-if="logTotal > 0"
                 v-model:current-page="currentPage"
-                :page-size="pageSize"
+                v-model:page-size="pageSize"
                 :total="logTotal"
                 layout="prev, pager, next, sizes, jumper"
                 @update:current-page="handlePageChange"
+                @update:page-size="handleSizeChange"
                 style="margin-top: 20px; text-align: right;"
                 :loading="logsLoading"
               />
@@ -504,6 +505,12 @@ const resetLogForm = () => {
 
 const handlePageChange = (page) => {
   currentPage.value = page
+  handleGetLogs()
+}
+
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  currentPage.value = 1
   handleGetLogs()
 }
 

@@ -78,11 +78,12 @@
         <!-- 分页 -->
         <div class="pagination-container">
           <el-pagination
-            layout="prev, pager, next"
+            layout="prev, pager, next, sizes, jumper"
             :total="total"
-            :page-size="pageSize"
+            v-model:page-size="pageSize"
             v-model:current-page="page"
             @update:current-page="handleCurrentChange"
+            @update:page-size="handleSizeChange"
           ></el-pagination>
         </div>
       </div>
@@ -250,6 +251,13 @@ const handleSelectionChange = (selection) => {
 // 分页
 const handleCurrentChange = (currentPage) => {
   page.value = currentPage
+  fetchNotifications()
+}
+
+// 处理每页条数变化
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  page.value = 1
   fetchNotifications()
 }
 

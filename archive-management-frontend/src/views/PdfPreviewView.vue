@@ -18,7 +18,7 @@
               :page-size="1"
               :total="previewInfo.params.totalPages"
               layout="prev, pager, next, jumper"
-              @current-change="handlePageChange"
+              @update:current-page="handlePageChange"
             />
           </div>
           <div class="page-navigation" v-else>
