@@ -120,8 +120,8 @@ class LargeFilePreviewer {
       
       // 如果是Office文件且文件太大，只给出提示，不进行预览
       const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'vsd', 'dwg']
-      if (officeExtensions.includes(fileExtension) && fileSize > largeFileThreshold) {
-        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，该类型文件过大，只能下载查看`)
+      if (officeExtensions.includes(fileExtension)) {
+        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，该类型文件不建议预览，只能下载查看`)
         return
       }
       
@@ -147,12 +147,6 @@ class LargeFilePreviewer {
       const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
       if (imageExtensions.includes(fileExtension)) {
         this.openImagePreview(archive)
-        return
-      }
-      
-      // 如果是Office文件，直接使用传统预览方式
-      if (officeExtensions.includes(fileExtension)) {
-        this.openTraditionalPreview(archive)
         return
       }
       
