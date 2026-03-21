@@ -8,7 +8,7 @@ const requestCache = new Map()
 // 创建axios实例
 const service = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 60000 // 超时时间改为60秒，适应大文件下载
 })
 
 // 请求拦截器

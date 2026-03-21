@@ -28,7 +28,11 @@ export const getArchiveByIdApi = (id) => {
  * @returns {Promise}
  */
 export const previewArchiveApi = (id) => {
-  return request.get('/info/preview', { params: { id }, responseType: 'blob' })
+  return request.get('/info/preview', { 
+    params: { id }, 
+    responseType: 'blob',
+    timeout: 120000 // 预览请求超时时间设置为120秒
+  })
 }
 
 /**
@@ -51,5 +55,9 @@ export const openPreviewArchive = (archive) => {
  * @returns {Promise}
  */
 export const downloadArchiveApi = (id) => {
-  return request.get('/info/download', { params: { id }, responseType: 'blob' })
+  return request.get('/info/download', { 
+    params: { id }, 
+    responseType: 'blob',
+    timeout: 300000 // 下载请求超时时间设置为300秒（5分钟）
+  })
 }
