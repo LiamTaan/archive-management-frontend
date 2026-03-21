@@ -1,5 +1,25 @@
 <template>
   <div class="archive-query-container">
+    <!-- 下载进度条 -->
+    <el-progress
+      v-if="isDownloading"
+      :percentage="downloadProgress"
+      :format="(percentage) => `${percentage.toFixed(2)}% ${currentDownloadArchive?.fileName || ''}`"
+      :status="downloadProgress === 100 ? 'success' : 'active'"
+      style="margin-bottom: 20px;"
+      :stroke-width="20"
+    />
+    
+    <!-- 下载控制按钮 -->
+    <div v-if="isDownloading" class="download-controls" style="margin-bottom: 20px;">
+      <el-button type="warning" @click="handlePauseDownload">
+        暂停下载
+      </el-button>
+      <el-button type="success" @click="handleResumeDownload(currentDownloadArchive)">
+        继续下载
+      </el-button>
+    </div>
+    
     <el-card shadow="hover">
       <template #header>
         <div class="card-header">
@@ -381,23 +401,42 @@ const handlePreviewArchive = async (archive) => {
   }
 }
 
+// 下载进度相关状态
+const downloadProgress = ref(0)
+const isDownloading = ref(false)
+const currentDownloadArchive = ref(null)
+
 // 下载档案
 const handleDownloadArchive = async (archive) => {
   try {
+    // 记录当前下载的档案
+    currentDownloadArchive.value = archive
+    isDownloading.value = true
+    downloadProgress.value = 0
+    
     // 使用新的下载工具
     const progressCallback = (progress) => {
       console.log(`下载进度: ${progress.toFixed(2)}%`)
-      // 这里可以添加进度条显示逻辑
+      // 更新进度条
+      downloadProgress.value = progress
     }
     
     const completeCallback = (blob) => {
       console.log('文件下载完成')
+      // 重置状态
+      isDownloading.value = false
+      downloadProgress.value = 0
+      currentDownloadArchive.value = null
     }
     
     await fileDownloadUtil.initDownload(archive.id, progressCallback, completeCallback)
     await fileDownloadUtil.start(archive.id)
   } catch (error) {
     ElMessage.error('下载档案失败：' + error.message)
+    // 重置状态
+    isDownloading.value = false
+    downloadProgress.value = 0
+    currentDownloadArchive.value = null
   }
 }
 

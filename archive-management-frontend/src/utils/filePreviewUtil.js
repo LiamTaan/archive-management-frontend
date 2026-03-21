@@ -143,10 +143,9 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openPdfPreview(fileId, fileName) {
-    // 这里实现PDF分页预览的UI逻辑
-    // 可以创建一个新窗口或弹出层，实现页码导航
-    console.log('打开PDF预览:', fileId, fileName)
-    ElMessage.info('PDF预览功能开发中')
+    // 实现PDF预览：创建一个新窗口，加载PDF预览页面
+    const previewUrl = `${window.location.origin}#/pdf-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
   /**
@@ -155,10 +154,9 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openVideoPreview(fileId, fileName) {
-    // 这里实现视频分片预览的UI逻辑
-    // 可以创建一个视频播放器，支持按需加载
-    console.log('打开视频预览:', fileId, fileName)
-    ElMessage.info('视频预览功能开发中')
+    // 实现视频预览：创建一个新窗口，加载视频预览页面
+    const previewUrl = `${window.location.origin}#/video-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
   /**

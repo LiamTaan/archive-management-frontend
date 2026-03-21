@@ -117,11 +117,24 @@ const routes = [
     component: () => import('../views/AuditReportView.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/notification',
+  {    path: '/notification',
     name: 'Notification',
     // 路由懒加载
     component: () => import('../views/NotificationView.vue'),
+    meta: { requiresAuth: true }
+  },
+  // PDF预览页面
+  {    path: '/pdf-preview',
+    name: 'PdfPreview',
+    // 路由懒加载
+    component: () => import('../views/PdfPreviewView.vue'),
+    meta: { requiresAuth: true }
+  },
+  // 视频预览页面
+  {    path: '/video-preview',
+    name: 'VideoPreview',
+    // 路由懒加载
+    component: () => import('../views/VideoPreviewView.vue'),
     meta: { requiresAuth: true }
   }
 ]
