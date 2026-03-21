@@ -154,8 +154,8 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openPdfPreview(fileId, fileName) {
-    // 在新标签页中打开系统内部的PDF预览页面，共享登录状态
-    const previewUrl = `${window.location.origin}/pdf-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 直接在浏览器新标签页打开预览链接，使用浏览器默认的PDF预览功能
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
     window.open(previewUrl, '_blank')
   }
 
@@ -165,8 +165,8 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openVideoPreview(fileId, fileName) {
-    // 在新标签页中打开系统内部的视频预览页面，共享登录状态
-    const previewUrl = `${window.location.origin}/video-preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 直接在浏览器新标签页打开视频预览链接，使用浏览器默认的视频预览功能
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${fileId}&fileName=${encodeURIComponent(fileName)}`
     window.open(previewUrl, '_blank')
   }
 
@@ -175,8 +175,9 @@ class LargeFilePreviewer {
    * @param {Object} archive 档案对象
    */
   openImagePreview(archive) {
-    // 图片可以直接使用PDF预览页面
-    this.openPdfPreview(archive.id, archive.fileName)
+    // 直接在浏览器新标签页打开图片预览链接，使用浏览器默认的图片预览功能
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${archive.id}`
+    window.open(previewUrl, '_blank')
   }
 
   /**
@@ -184,8 +185,8 @@ class LargeFilePreviewer {
    * @param {Object} archive 档案对象
    */
   openTraditionalPreview(archive) {
-    // 使用PDF预览页面作为默认预览方式，在新标签页中打开
-    const previewUrl = `${window.location.origin}/pdf-preview?id=${archive.id}&fileName=${encodeURIComponent(archive.fileName)}`
+    // 使用与其他API相同的基础URL处理方式，直接打开预览链接
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${archive.id}`
     window.open(previewUrl, '_blank')
   }
 

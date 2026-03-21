@@ -89,7 +89,15 @@ const pdfUrl = computed(() => {
 // 初始化预览
 const initPreview = async () => {
   try {
-    const fileId = route.query.fileId
+    // 从URL中直接获取查询参数，确保能正确获取fileId
+    let fileId = route.query.fileId
+    
+    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
+    if (!fileId) {
+      const urlParams = new URLSearchParams(window.location.search)
+      fileId = urlParams.get('id')
+    }
+    
     if (!fileId) {
       ElMessage.error('文件ID不能为空')
       router.back()
@@ -112,7 +120,13 @@ const initPreview = async () => {
 const loadPdfPage = async (page) => {
   try {
     isLoading.value = true
-    const fileId = route.query.fileId
+    let fileId = route.query.fileId
+    
+    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
+    if (!fileId) {
+      const urlParams = new URLSearchParams(window.location.search)
+      fileId = urlParams.get('id')
+    }
     
     // 调用PDF分页预览接口
     const response = await previewPdfPageApi(fileId, page)

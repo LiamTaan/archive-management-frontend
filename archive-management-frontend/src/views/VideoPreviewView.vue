@@ -100,7 +100,15 @@ const videoUrl = computed(() => {
 // 初始化预览
 const initPreview = async () => {
   try {
-    const fileId = route.query.fileId
+    // 从URL中直接获取查询参数，确保能正确获取fileId
+    let fileId = route.query.fileId
+    
+    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
+    if (!fileId) {
+      const urlParams = new URLSearchParams(window.location.search)
+      fileId = urlParams.get('id')
+    }
+    
     if (!fileId) {
       ElMessage.error('文件ID不能为空')
       router.back()
@@ -123,7 +131,13 @@ const initPreview = async () => {
 const loadVideoSegment = async (startTime, endTime) => {
   try {
     isLoading.value = true
-    const fileId = route.query.fileId
+    let fileId = route.query.fileId
+    
+    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
+    if (!fileId) {
+      const urlParams = new URLSearchParams(window.location.search)
+      fileId = urlParams.get('id')
+    }
     
     // 调用视频分片预览接口
     const response = await previewVideoSegmentApi(fileId, startTime, endTime)
@@ -153,7 +167,14 @@ const handlePlaySegment = () => {
 const handlePlayFullVideo = () => {
   if (videoRef.value && previewInfo.value) {
     // 构建完整视频播放URL
-    const fileId = route.query.fileId
+    let fileId = route.query.fileId
+    
+    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
+    if (!fileId) {
+      const urlParams = new URLSearchParams(window.location.search)
+      fileId = urlParams.get('id')
+    }
+    
     const fullVideoUrl = `${import.meta.env.VITE_API_BASE_URL}/archive/info/download?id=${fileId}`
     
     // 设置完整视频URL
