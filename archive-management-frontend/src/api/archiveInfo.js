@@ -36,20 +36,6 @@ export const previewArchiveApi = (id) => {
 }
 
 /**
- * 直接预览档案文件（打开新窗口）
- * @param {Object} archive 档案对象
- */
-export const openPreviewArchive = (archive) => {
-  // 使用固定的后端地址，绕过前端路由拦截
-  // 确保使用完整的后端地址，包括/archive前缀
-  const previewUrl = `${import.meta.env.VITE_API_BASE_URL}/archive/info/preview?id=${archive.id}` 
-  
-  // 直接使用window.open打开预览链接，并指定窗口名称为文件名
-  // 这种方式可以确保浏览器使用文件名作为窗口标题（至少在初始加载时）
-  window.open(previewUrl, archive.fileName)
-}
-
-/**
  * 下载档案文件
  * @param {number} id 档案ID
  * @returns {Promise}
@@ -112,10 +98,20 @@ export const getPreviewInfoApi = (id) => {
  * @returns {Promise}
  */
 export const previewPdfPageApi = (id, page) => {
+  // 直接使用完整的API路径，避免路径问题
   return request.get('/info/preview/pdf/page', { 
     params: { id, page },
     responseType: 'blob',
-    timeout: 300000
+    timeout: 300000,
+    headers: {
+      // 确保认证头被正确传递
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+    },
+    // 禁用响应头处理，避免中文文件名导致的问题
+    transformResponse: [function (data) {
+      // 直接返回原始数据，不进行任何转换
+      return data
+    }]
   })
 }
 
@@ -127,21 +123,20 @@ export const previewPdfPageApi = (id, page) => {
  * @returns {Promise}
  */
 export const previewVideoSegmentApi = (id, startTime, endTime) => {
+  // 直接使用完整的API路径，避免路径问题
   return request.get('/info/preview/video/segment', { 
     params: { id, startTime, endTime },
     responseType: 'blob',
-    timeout: 300000
+    timeout: 300000,
+    headers: {
+      // 确保认证头被正确传递
+      Authorization: `Bearer ${localStorage.getItem('token') || ''}`
+    },
+    // 禁用响应头处理，避免中文文件名导致的问题
+    transformResponse: [function (data) {
+      // 直接返回原始数据，不进行任何转换
+      return data
+    }]
   })
 }
 
-/**
- * Office文件转换为PDF
- * @param {number} id 档案ID
- * @returns {Promise}
- */
-export const convertOfficeToPdfApi = (id) => {
-  return request.post('/info/preview/convert', null, { 
-    params: { id },
-    timeout: 300000
-  })
-}

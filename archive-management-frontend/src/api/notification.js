@@ -9,13 +9,6 @@ export const getNotifications = (params) => {
   })
 }
 
-// 获取通知详情
-export const getNotificationDetail = (id) => {
-  return request({
-    url: `/notification/detail/${id}`,
-    method: 'get'
-  })
-}
 
 // 标记通知为已读
 export const markNotificationAsRead = (id) => {

@@ -17,7 +17,11 @@ service.interceptors.request.use(
     // 添加Token到请求头
     const token = localStorage.getItem('token')
     if (token) {
+      // 确保Authorization头被正确设置
       config.headers.Authorization = `Bearer ${token}`
+      console.log('请求添加Token:', token.substring(0, 10) + '...')
+    } else {
+      console.warn('没有找到Token，请求可能会失败')
     }
     
     return config

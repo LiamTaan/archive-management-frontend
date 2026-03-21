@@ -21,10 +21,3 @@ export const logoutApi = () => {
   return request.post('/auth/logout')
 }
 
-/**
- * 获取当前用户信息
- * @returns {Promise}
- */
-export const getCurrentUserApi = () => {
-  return request.get('/auth/currentUser')
-}

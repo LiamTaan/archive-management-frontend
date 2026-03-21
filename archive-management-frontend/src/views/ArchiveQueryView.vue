@@ -246,12 +246,11 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
-import { queryArchiveByPageApi, getArchiveByIdApi, downloadArchiveApi, openPreviewArchive } from '../api/archiveInfo'
+import { ElMessage } from 'element-plus'
+import { queryArchiveByPageApi, getArchiveByIdApi } from '../api/archiveInfo'
 import { batchHangOnApi } from '../api/hangOn'
 import { getInterfaceConfigsApi } from '../api/interfaceConfig'
-import { transformPageRequest, transformPageResponse } from '../utils/pagination'
+import { transformPageResponse } from '../utils/pagination'
 
 const activeTab = ref('query')
 
@@ -444,7 +443,7 @@ const formatFileSize = (size) => {
 
 // 导入大文件下载和预览工具
 import fileDownloadUtil from '../utils/fileDownloadUtil'
-import filePreviewUtil from '../utils/filePreviewUtil'
+import { filePreviewUtil } from '../utils/filePreviewUtil'
 
 // 预览档案
 const handlePreviewArchive = async (archive) => {

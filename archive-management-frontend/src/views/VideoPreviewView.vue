@@ -1,295 +1,235 @@
 <template>
   <div class="video-preview-container">
-    <el-card shadow="hover">
-      <template #header>
-        <div class="card-header">
-          <span>视频文件预览</span>
-          <el-button type="primary" @click="handleClose">关闭预览</el-button>
-        </div>
-      </template>
-
-      <div class="preview-content">
-        <!-- 视频预览区域 -->
-        <div class="video-viewer" v-if="previewInfo">
-          <!-- 视频播放器 -->
-          <div class="video-player">
-            <video
-              ref="videoRef"
-              controls
-              :src="videoUrl"
-              :poster="posterUrl"
-              :preload="'metadata'"
-              @loadedmetadata="handleLoadedMetadata"
-              @timeupdate="handleTimeUpdate"
-              @error="handleVideoError"
-              style="width: 100%; height: auto; max-height: 500px;"
-            >
-              您的浏览器不支持HTML5视频播放。
-            </video>
-          </div>
-
-          <!-- 视频信息 -->
-          <div class="video-info" style="margin-top: 20px;">
-            <el-descriptions :column="2" border>
-              <el-descriptions-item label="文件名">{{ previewInfo.fileName }}</el-descriptions-item>
-              <el-descriptions-item label="文件大小">{{ formatFileSize(previewInfo.fileSize) }}</el-descriptions-item>
-              <el-descriptions-item label="视频时长">{{ formatDuration(videoDuration) }}</el-descriptions-item>
-              <el-descriptions-item label="当前时间">{{ formatDuration(currentTime) }}</el-descriptions-item>
-            </el-descriptions>
-          </div>
-
-          <!-- 分片加载控制 -->
-          <div class="segment-controls" style="margin-top: 20px;">
-            <el-button type="primary" @click="handlePlaySegment">
-              播放当前片段
-            </el-button>
-            <el-button @click="handlePlayFullVideo">
-              播放完整视频
-            </el-button>
-            <el-input-number
-              v-model="segmentDuration"
-              :min="5"
-              :max="60"
-              :step="5"
-              label="片段时长(秒)"
-              style="margin-left: 20px;"
-            />
-          </div>
-        </div>
-
-        <!-- 加载状态 -->
-        <div v-else class="loading-container">
-          <el-icon class="is-loading"><Loading /></el-icon>
-          <span>加载预览信息中...</span>
-        </div>
+    <!-- 头部信息 -->
+    <div class="preview-header">
+      <h2>{{ fileName }}</h2>
+      <el-button type="primary" @click="closePreview">关闭预览</el-button>
+    </div>
+    
+    <!-- 视频播放区域 -->
+    <div class="video-content">
+      <!-- 加载状态 -->
+      <el-skeleton v-if="loading" animated :rows="8" />
+      
+      <!-- 视频播放器 -->
+      <div v-else class="video-player-container">
+        <video 
+          ref="videoPlayer" 
+          class="video-player" 
+          controls 
+          @timeupdate="handleTimeUpdate" 
+          @loadedmetadata="handleLoadedMetadata"
+          @error="handleVideoError"
+        ></video>
       </div>
-    </el-card>
+    </div>
+    
+    <!-- 视频信息 -->
+    <div class="video-info" v-if="!loading">
+      <el-progress 
+        :percentage="progressPercentage" 
+        :stroke-width="8" 
+        :text-inside="true"
+      />
+      <div class="time-info">
+        <span>当前时间: {{ formatTime(currentTime) }}</span>
+        <span>总时长: {{ formatTime(totalDuration) }}</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
 import { getPreviewInfoApi, previewVideoSegmentApi } from '../api/archiveInfo'
 
+// 从URL参数中获取fileId和fileName
+import { useRoute } from 'vue-router'
 const route = useRoute()
-const router = useRouter()
+const fileId = ref(parseInt(route.query.fileId) || 0)
+const fileName = ref(route.query.fileName || '')
 
-// 视频播放器引用
-const videoRef = ref(null)
+// Emits
+const emit = defineEmits(['close'])
 
-// 预览状态
-const previewInfo = ref(null)
-const isLoading = ref(false)
-const segmentDuration = ref(30) // 默认片段时长30秒
-const videoDuration = ref(0) // 视频总时长
-const currentTime = ref(0) // 当前播放时间
-const videoBlob = ref(null) // 当前视频片段Blob
-const posterUrl = ref('') // 视频封面
+// State
+const loading = ref(false)
+const videoPlayer = ref(null)
+const currentTime = ref(0)
+const totalDuration = ref(0)
+const progressPercentage = ref(0)
+const currentSegmentStart = ref(0)
+const segmentDuration = 30 // 每个视频片段的时长（秒）
+const currentBlobUrl = ref('')
 
-// 计算属性：视频预览URL
-const videoUrl = computed(() => {
-  if (videoBlob.value) {
-    return URL.createObjectURL(videoBlob.value)
-  }
-  return ''
-})
+// 关闭预览
+const closePreview = () => {
+  emit('close')
+}
 
-// 初始化预览
-const initPreview = async () => {
+// 获取预览信息
+const getPreviewInfo = async () => {
   try {
-    // 从URL中直接获取查询参数，确保能正确获取fileId
-    let fileId = route.query.fileId
-    
-    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
-    if (!fileId) {
-      const urlParams = new URLSearchParams(window.location.search)
-      fileId = urlParams.get('id')
-    }
-    
-    if (!fileId) {
-      ElMessage.error('文件ID不能为空')
-      router.back()
-      return
-    }
-
-    // 获取预览信息
-    const response = await getPreviewInfoApi(fileId)
-    previewInfo.value = response.data
-    
-    // 加载初始视频片段
-    await loadVideoSegment(0, segmentDuration.value)
+    const response = await getPreviewInfoApi(fileId.value)
+    console.log('视频预览信息获取成功:', response.data)
+    totalDuration.value = response.data.totalDuration || 0
   } catch (error) {
     ElMessage.error('获取预览信息失败: ' + error.message)
-    router.back()
+    console.error('获取视频预览信息失败:', error)
   }
 }
 
 // 加载视频片段
 const loadVideoSegment = async (startTime, endTime) => {
+  console.log('开始加载视频片段:', startTime, '-', endTime, 'fileId:', fileId.value)
+  loading.value = true
   try {
-    isLoading.value = true
-    let fileId = route.query.fileId
-    
-    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
-    if (!fileId) {
-      const urlParams = new URLSearchParams(window.location.search)
-      fileId = urlParams.get('id')
-    }
-    
     // 调用视频分片预览接口
-    const response = await previewVideoSegmentApi(fileId, startTime, endTime)
-    videoBlob.value = response
+    const blob = await previewVideoSegmentApi(fileId.value, startTime, endTime)
+    console.log('previewVideoSegmentApi返回:', blob)
     
-    // 重置播放器
-    if (videoRef.value) {
-      videoRef.value.load()
-      videoRef.value.play()
+    // 检查blob是否有效
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('返回的不是有效的Blob对象')
     }
+    
+    // 检查blob大小
+    console.log('Blob大小:', blob.size, '类型:', blob.type)
+    
+    // 清理之前的Blob URL
+    if (currentBlobUrl.value) {
+      URL.revokeObjectURL(currentBlobUrl.value)
+    }
+    
+    // 创建新的Blob URL
+    const url = URL.createObjectURL(blob)
+    currentBlobUrl.value = url
+    
+    // 更新视频源
+    if (videoPlayer.value) {
+      videoPlayer.value.src = url
+      videoPlayer.value.currentTime = startTime
+      videoPlayer.value.play()
+    }
+    
+    // 记录当前片段范围
+    currentSegmentStart.value = startTime
+    console.log('视频片段加载成功:', startTime, '-', endTime, 'Blob URL:', url)
   } catch (error) {
-    ElMessage.error(`加载视频片段失败: ` + error.message)
+    console.error('加载视频片段失败:', error)
+    ElMessage.error('加载视频片段失败: ' + error.message)
   } finally {
-    isLoading.value = false
+    loading.value = false
+    console.log('loadVideoSegment函数执行完成')
   }
 }
 
-// 播放当前片段
-const handlePlaySegment = () => {
-  if (videoRef.value) {
-    const currentTime = videoRef.value.currentTime
-    loadVideoSegment(currentTime, currentTime + segmentDuration.value)
-  }
-}
-
-// 播放完整视频
-const handlePlayFullVideo = () => {
-  if (videoRef.value && previewInfo.value) {
-    // 构建完整视频播放URL
-    let fileId = route.query.fileId
-    
-    // 如果route.query.fileId获取不到，尝试从window.location.search中直接解析
-    if (!fileId) {
-      const urlParams = new URLSearchParams(window.location.search)
-      fileId = urlParams.get('id')
-    }
-    
-    const fullVideoUrl = `${import.meta.env.VITE_API_BASE_URL}/archive/info/download?id=${fileId}`
-    
-    // 设置完整视频URL
-    videoRef.value.src = fullVideoUrl
-    videoRef.value.load()
-    videoRef.value.play()
-  }
-}
-
-// 视频元数据加载完成
-const handleLoadedMetadata = () => {
-  if (videoRef.value) {
-    videoDuration.value = videoRef.value.duration
-  }
-}
-
-// 视频播放时间更新
+// 处理视频播放时间更新
 const handleTimeUpdate = () => {
-  if (videoRef.value) {
-    currentTime.value = videoRef.value.currentTime
+  if (videoPlayer.value) {
+    currentTime.value = videoPlayer.value.currentTime
+    progressPercentage.value = Math.floor((currentTime.value / totalDuration.value) * 100)
     
-    // 如果接近当前片段末尾，自动加载下一个片段
-    if (videoBlob.value && videoRef.value.duration - currentTime.value < 5) {
-      handlePlaySegment()
+    // 预加载下一个片段
+    const nextSegmentStart = currentSegmentStart.value + segmentDuration
+    const preloadThreshold = currentSegmentStart.value + segmentDuration * 0.7
+    
+    if (currentTime.value >= preloadThreshold && nextSegmentStart < totalDuration.value) {
+      // 预加载下一个片段，不影响当前播放
+      loadVideoSegment(nextSegmentStart, nextSegmentStart + segmentDuration)
     }
   }
 }
 
-// 视频播放错误处理
-const handleVideoError = (event) => {
-  console.error('视频播放错误:', event)
-  ElMessage.error('视频播放错误，请尝试重新加载。')
-}
-
-// 关闭预览
-const handleClose = () => {
-  // 释放URL对象
-  if (videoBlob.value) {
-    URL.revokeObjectURL(videoUrl.value)
+// 处理视频元数据加载完成
+const handleLoadedMetadata = () => {
+  if (videoPlayer.value && !totalDuration.value) {
+    totalDuration.value = videoPlayer.value.duration
   }
-  router.back()
 }
 
-// 格式化文件大小
-const formatFileSize = (size) => {
-  if (!size) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB', 'TB']
-  let unitIndex = 0
-  let fileSize = size
-  while (fileSize >= 1024 && unitIndex < units.length - 1) {
-    fileSize /= 1024
-    unitIndex++
-  }
-  return `${fileSize.toFixed(2)} ${units[unitIndex]}`
+// 处理视频错误
+const handleVideoError = () => {
+  ElMessage.error('视频播放失败')
 }
 
-// 格式化时长（秒转换为时分秒）
-const formatDuration = (seconds) => {
-  if (!seconds || isNaN(seconds)) return '00:00:00'
-  
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = Math.floor(seconds % 60)
-  
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+// 格式化时间
+const formatTime = (seconds) => {
+  const mins = Math.floor(seconds / 60)
+  const secs = Math.floor(seconds % 60)
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 }
 
-// 页面加载时初始化预览
+// 初始化
 onMounted(() => {
-  initPreview()
+  getPreviewInfo()
+  // 加载第一个视频片段
+  loadVideoSegment(0, segmentDuration)
+})
+
+// 清理资源
+watch(() => fileId.value, () => {
+  if (currentBlobUrl.value) {
+    URL.revokeObjectURL(currentBlobUrl.value)
+  }
 })
 </script>
 
 <style scoped>
 .video-preview-container {
-  padding: 20px;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
 }
 
-.card-header {
+.preview-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 10px 20px;
+  background-color: white;
+  border-bottom: 1px solid #eee;
 }
 
-.preview-content {
-  padding: 20px 0;
-}
-
-.video-viewer {
+.video-content {
+  flex: 1;
+  padding: 20px;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+}
+
+.video-player-container {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 1200px;
 }
 
 .video-player {
-  border: 1px solid #e0e0e0;
+  width: 100%;
+  max-width: 1200px;
+  height: auto;
   border-radius: 4px;
-  overflow: hidden;
-  background-color: #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
-.loading-container {
-  height: 400px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  color: #606266;
+.video-info {
+  padding: 20px;
+  background-color: white;
+  border-top: 1px solid #eee;
 }
 
-.is-loading {
-  font-size: 32px;
-  color: #409eff;
-  margin-right: 10px;
+.time-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #666;
 }
 </style>

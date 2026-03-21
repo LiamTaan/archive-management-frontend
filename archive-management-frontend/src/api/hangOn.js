@@ -4,14 +4,6 @@ import request from './request'
  * 挂接管理API
  */
 
-/**
- * 自动挂接档案
- * @param {number} archiveId 档案ID
- * @returns {Promise}
- */
-export const autoHangOnApi = (archiveId) => {
-  return request.post(`/hang-on/auto/${archiveId}`)
-}
 
 /**
  * 手动挂接档案
@@ -44,15 +36,6 @@ export const unhookApi = (archiveId, systemCode, operateBy) => {
   return request.post(`/hang-on/unhook/${archiveId}?systemCode=${systemCode}&operateBy=${operateBy}`)
 }
 
-/**
- * 重试挂接失败的档案
- * @param {number} archiveId 档案ID
- * @param {string} operateBy 操作人
- * @returns {Promise}
- */
-export const retryHangOnApi = (archiveId, operateBy) => {
-  return request.post(`/hang-on/retry/${archiveId}?operateBy=${operateBy}`)
-}
 
 /**
  * 获取挂接关系
