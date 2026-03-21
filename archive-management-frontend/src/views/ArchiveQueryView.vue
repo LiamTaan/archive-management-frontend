@@ -217,6 +217,30 @@
       </el-tabs>
     </el-card>
 
+    <!-- 批量挂接对话框 -->
+    <el-dialog v-model="batchHangOnDialogVisible" title="批量挂接" width="50%">
+      <el-form :model="batchHangOnForm" label-width="120px">
+        <el-form-item label="目标系统" prop="systemCode">
+          <el-select v-model="batchHangOnForm.systemCode" placeholder="请选择目标系统" :loading="systemOptionsLoading">
+            <el-option
+              v-for="option in systemOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="操作人" prop="operateBy">
+          <el-input v-model="batchHangOnForm.operateBy" placeholder="请输入操作人" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchHangOnDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmBatchHangOn" :loading="batchHangOnLoading">确定</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
   </div>
 </template>
@@ -226,6 +250,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import { queryArchiveByPageApi, getArchiveByIdApi, downloadArchiveApi, openPreviewArchive } from '../api/archiveInfo'
+import { batchHangOnApi } from '../api/hangOn'
+import { getInterfaceConfigsApi } from '../api/interfaceConfig'
 import { transformPageRequest, transformPageResponse } from '../utils/pagination'
 
 const activeTab = ref('query')
@@ -269,8 +295,40 @@ const toggleExpand = () => {
 // 批量操作
 const selectedRows = ref([])
 
+// 批量挂接对话框
+const batchHangOnDialogVisible = ref(false)
+const batchHangOnLoading = ref(false)
+const batchHangOnForm = reactive({
+  systemCode: '',
+  operateBy: ''
+})
+
 // 档案详情
 const detailInfo = ref(null)
+
+// 目标系统列表
+const systemOptions = ref([])
+const systemOptionsLoading = ref(false)
+
+// 获取目标系统列表
+const getSystemOptions = async () => {
+  try {
+    systemOptionsLoading.value = true
+    // 只获取启用状态的接口配置
+    const response = await getInterfaceConfigsApi({ status: 1 })
+    if (response.code === 200) {
+      // 从接口配置中提取接口编码作为目标系统选项
+      systemOptions.value = response.data.records.map(config => ({
+        label: config.businessSystem,
+        value: config.interfaceCode
+      }))
+    }
+  } catch (error) {
+    console.error('获取目标系统列表失败：', error)
+  } finally {
+    systemOptionsLoading.value = false
+  }
+}
 
 // 处理查询
 const handleQuery = async () => {
@@ -461,54 +519,66 @@ const handleBatchHangOn = async () => {
     ElMessage.warning('请选择需要挂接的档案')
     return
   }
+  
+  // 重置表单
+  batchHangOnForm.systemCode = ''
+  batchHangOnForm.operateBy = ''
+  
+  // 打开对话框
+  batchHangOnDialogVisible.value = true
+}
 
+// 确认批量挂接
+const confirmBatchHangOn = async () => {
+  if (!batchHangOnForm.systemCode) {
+    ElMessage.warning('请选择目标系统')
+    return
+  }
+  
+  if (!batchHangOnForm.operateBy) {
+    ElMessage.warning('请输入操作人')
+    return
+  }
+  
   try {
-    // 弹出对话框，让用户选择目标系统和操作人
-    const result = await ElMessageBox.prompt('请输入操作人', '批量挂接', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      inputValue: '',
-      inputPlaceholder: '操作人'
-    })
-
-    const operateBy = result.value
-    if (!operateBy) {
-      ElMessage.warning('请输入操作人')
-      return
-    }
-
+    batchHangOnLoading.value = true
+    
     // 获取选中档案的ID列表
     const archiveIds = selectedRows.value.map(row => row.id)
     
-    // 这里可以根据实际情况添加目标系统选择
-    // 假设默认挂接到第一个系统
-    const systemCode = 'default_system'
-    
     // 调用批量挂接API
-    // 注意：这里需要根据实际的API进行调整
-    // const response = await batchHangOnApi({
-    //   archiveIds,
-    //   systemCode,
-    //   operateBy,
-    //   hangOnMethod: 'manual'
-    // })
+    const response = await batchHangOnApi({
+      archiveIds,
+      systemCode: batchHangOnForm.systemCode,
+      operateBy: batchHangOnForm.operateBy,
+      hangOnMethod: 'manual'
+    })
     
-    // 模拟API调用
-    ElMessage.success(`批量挂接请求已提交，共 ${archiveIds.length} 个档案`)
-    
-    // 清空选中记录
-    selectedRows.value = []
-  } catch (error) {
-    if (error === 'cancel') {
-      return
+    if (response.code === 200) {
+      ElMessage.success(`批量挂接请求已提交，共 ${archiveIds.length} 个档案`)
+      
+      // 关闭对话框
+      batchHangOnDialogVisible.value = false
+      
+      // 清空选中记录
+      selectedRows.value = []
+      
+      // 重新查询档案列表，更新状态
+      handleQuery()
+    } else {
+      ElMessage.error('批量挂接失败：' + response.message)
     }
+  } catch (error) {
     ElMessage.error('批量挂接失败：' + error.message)
+  } finally {
+    batchHangOnLoading.value = false
   }
 }
 
-// 页面加载时自动执行查询
+// 页面加载时自动执行查询和初始化目标系统列表
 onMounted(() => {
   handleQuery()
+  getSystemOptions()
 })
 </script>
 
