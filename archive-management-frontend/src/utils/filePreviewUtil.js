@@ -108,16 +108,41 @@ class LargeFilePreviewer {
    */
   async openPreview(archive) {
     try {
+      // 先检查文件扩展名，直接判断文件类型，避免后端返回错误的previewType导致无限轮询
+      const fileName = archive.fileName || ''
+      const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+      
+      // 如果是PDF文件，直接使用PDF预览方式，不依赖后端返回的previewType
+      if (fileExtension === 'pdf') {
+        this.openPdfPreview(archive.id, fileName)
+        return
+      }
+      
+      // 如果是视频文件，直接使用视频预览方式
+      const videoExtensions = ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv']
+      if (videoExtensions.includes(fileExtension)) {
+        this.openVideoPreview(archive.id, fileName)
+        return
+      }
+      
+      // 如果是图片文件，直接使用图片预览方式
+      const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp']
+      if (imageExtensions.includes(fileExtension)) {
+        this.openImagePreview(archive)
+        return
+      }
+      
+      // 其他文件类型，再调用后端接口获取预览信息
       this.isPreviewing = true
       const previewInfo = await this.initPreview(archive.id)
       
       // 根据预览类型选择预览方式
       switch (previewInfo.previewType) {
         case 'pdf':
-          this.openPdfPreview(archive.id, archive.fileName)
+          this.openPdfPreview(archive.id, fileName)
           break
         case 'video':
-          this.openVideoPreview(archive.id, archive.fileName)
+          this.openVideoPreview(archive.id, fileName)
           break
         case 'image':
           this.openImagePreview(archive)
@@ -129,6 +154,7 @@ class LargeFilePreviewer {
         default:
           // 使用传统方式预览
           this.openTraditionalPreview(archive)
+          this.isPreviewing = false
           break
       }
     } catch (error) {
@@ -183,11 +209,23 @@ class LargeFilePreviewer {
    * @param {Object} archive 档案对象
    */
   waitForConvertAndPreview(archive) {
+    let retryCount = 0
+    const maxRetryCount = 30 // 最多重试30次，避免无限轮询
+    
     // 模拟轮询转换状态
     const checkStatus = async () => {
+      // 检查预览状态和重试次数
       if (!this.isPreviewing) return
+      if (retryCount >= maxRetryCount) {
+        ElMessage.error('转换超时，无法预览')
+        this.isPreviewing = false
+        return
+      }
       
       try {
+        retryCount++
+        console.log(`检查转换状态 (${retryCount}/${maxRetryCount})`)
+        
         // 直接调用预览信息接口，不触发转换
         const response = await getPreviewInfoApi(archive.id)
         const previewInfo = response.data
@@ -201,8 +239,9 @@ class LargeFilePreviewer {
           ElMessage.error('文件转换失败，无法预览')
           this.isPreviewing = false
         } else {
-          // 继续等待
-          setTimeout(checkStatus, 2000)
+          // 继续等待，每次等待时间递增，避免频繁请求
+          const waitTime = 2000 + (retryCount * 500) // 从2秒开始，每次增加500毫秒
+          setTimeout(checkStatus, waitTime)
         }
       } catch (error) {
         ElMessage.error('检查转换状态失败: ' + error.message)
@@ -210,7 +249,7 @@ class LargeFilePreviewer {
       }
     }
     
-    // 立即开始检查，而不是等待2秒
+    // 立即开始检查
     checkStatus()
   }
 
