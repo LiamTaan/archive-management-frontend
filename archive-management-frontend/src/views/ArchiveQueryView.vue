@@ -365,11 +365,15 @@ const formatFileSize = (size) => {
 
 
 
+// 导入大文件下载和预览工具
+import fileDownloadUtil from '../utils/fileDownloadUtil'
+import filePreviewUtil from '../utils/filePreviewUtil'
+
 // 预览档案
-const handlePreviewArchive = (archive) => {
+const handlePreviewArchive = async (archive) => {
   try {
-    // 直接在新窗口中打开预览链接，传递完整的档案对象
-    openPreviewArchive(archive)
+    // 使用新的预览工具
+    await filePreviewUtil.openPreview(archive)
     ElMessage.success('档案预览成功')
   } catch (error) {
     console.error('预览档案失败:', error)
@@ -377,48 +381,39 @@ const handlePreviewArchive = (archive) => {
   }
 }
 
-// 判断是否为图片文件
-const isImageFile = (fileType) => {
-  const imageTypes = ['jpg', 'jpeg', 'png', 'gif']
-  return imageTypes.includes(fileType.toLowerCase())
-}
-
 // 下载档案
 const handleDownloadArchive = async (archive) => {
   try {
-    const response = await downloadArchiveApi(archive.id)
-    const blob = new Blob([response], { type: getFileContentType(archive.fileType) })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = archive.fileName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-    ElMessage.success('档案下载成功')
+    // 使用新的下载工具
+    const progressCallback = (progress) => {
+      console.log(`下载进度: ${progress.toFixed(2)}%`)
+      // 这里可以添加进度条显示逻辑
+    }
+    
+    const completeCallback = (blob) => {
+      console.log('文件下载完成')
+    }
+    
+    await fileDownloadUtil.initDownload(archive.id, progressCallback, completeCallback)
+    await fileDownloadUtil.start(archive.id)
   } catch (error) {
     ElMessage.error('下载档案失败：' + error.message)
   }
 }
 
-// 获取文件内容类型
-const getFileContentType = (fileType) => {
-  const contentTypeMap = {
-    pdf: 'application/pdf',
-    doc: 'application/msword',
-    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    xls: 'application/vnd.ms-excel',
-    xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ppt: 'application/vnd.ms-powerpoint',
-    pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    txt: 'text/plain'
+// 暂停下载
+const handlePauseDownload = () => {
+  fileDownloadUtil.pause()
+}
+
+// 继续下载
+const handleResumeDownload = async (archive) => {
+  try {
+    await fileDownloadUtil.resume(archive.id)
+    ElMessage.success('下载已继续')
+  } catch (error) {
+    ElMessage.error('继续下载失败：' + error.message)
   }
-  return contentTypeMap[fileType.toLowerCase()] || 'application/octet-stream'
 }
 
 // 批量挂接

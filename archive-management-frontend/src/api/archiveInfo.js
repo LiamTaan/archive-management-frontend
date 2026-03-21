@@ -61,3 +61,87 @@ export const downloadArchiveApi = (id) => {
     timeout: 300000 // 下载请求超时时间设置为300秒（5分钟）
   })
 }
+
+// ------------------------------ 大文件下载新接口 ------------------------------
+
+/**
+ * 获取文件分片信息（预下载接口）
+ * @param {number} id 档案ID
+ * @returns {Promise}
+ */
+export const getFileChunkInfoApi = (id) => {
+  return request.get('/info/download/pre', { 
+    params: { id },
+    timeout: 300000
+  })
+}
+
+/**
+ * 下载指定分片（核心下载接口）
+ * @param {number} id 档案ID
+ * @param {number} chunkIndex 分片索引
+ * @param {number} chunkSize 分片大小
+ * @returns {Promise}
+ */
+export const downloadChunkApi = (id, chunkIndex, chunkSize) => {
+  return request.get('/info/download/chunk', { 
+    params: { id, chunkIndex, chunkSize },
+    responseType: 'blob',
+    timeout: 300000
+  })
+}
+
+// ------------------------------ 大文件预览新接口 ------------------------------
+
+/**
+ * 获取预览基础信息
+ * @param {number} id 档案ID
+ * @returns {Promise}
+ */
+export const getPreviewInfoApi = (id) => {
+  return request.get('/info/preview/info', { 
+    params: { id },
+    timeout: 300000
+  })
+}
+
+/**
+ * PDF分页预览
+ * @param {number} id 档案ID
+ * @param {number} page 页码
+ * @returns {Promise}
+ */
+export const previewPdfPageApi = (id, page) => {
+  return request.get('/info/preview/pdf/page', { 
+    params: { id, page },
+    responseType: 'blob',
+    timeout: 300000
+  })
+}
+
+/**
+ * 视频分片预览
+ * @param {number} id 档案ID
+ * @param {number} startTime 起始时间（秒）
+ * @param {number} endTime 结束时间（秒）
+ * @returns {Promise}
+ */
+export const previewVideoSegmentApi = (id, startTime, endTime) => {
+  return request.get('/info/preview/video/segment', { 
+    params: { id, startTime, endTime },
+    responseType: 'blob',
+    timeout: 300000
+  })
+}
+
+/**
+ * Office文件转换为PDF
+ * @param {number} id 档案ID
+ * @returns {Promise}
+ */
+export const convertOfficeToPdfApi = (id) => {
+  return request.post('/info/preview/convert', null, { 
+    params: { id },
+    timeout: 300000
+  })
+}
