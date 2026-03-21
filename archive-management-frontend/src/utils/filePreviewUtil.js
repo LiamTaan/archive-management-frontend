@@ -144,7 +144,8 @@ class LargeFilePreviewer {
    */
   openPdfPreview(fileId, fileName) {
     // 实现PDF预览：创建一个新窗口，加载PDF预览页面
-    const previewUrl = `${window.location.origin}#/pdf-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 使用history模式URL，不带#号
+    const previewUrl = `${window.location.origin}/pdf-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
     window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
@@ -155,7 +156,8 @@ class LargeFilePreviewer {
    */
   openVideoPreview(fileId, fileName) {
     // 实现视频预览：创建一个新窗口，加载视频预览页面
-    const previewUrl = `${window.location.origin}#/video-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 使用history模式URL，不带#号
+    const previewUrl = `${window.location.origin}/video-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
     window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
@@ -173,7 +175,8 @@ class LargeFilePreviewer {
    * @param {Object} archive 档案对象
    */
   openTraditionalPreview(archive) {
-    const previewUrl = `${import.meta.env.VITE_API_BASE_URL}/archive/info/preview?id=${archive.id}`
+    // 使用与其他API相同的基础URL处理方式
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${archive.id}`
     window.open(previewUrl, archive.fileName)
   }
 
