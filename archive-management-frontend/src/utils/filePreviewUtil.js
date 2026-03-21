@@ -143,9 +143,8 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openPdfPreview(fileId, fileName) {
-    // 实现PDF预览：创建一个新窗口，加载PDF预览页面
-    // 使用history模式URL，不带#号
-    const previewUrl = `${window.location.origin}/pdf-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 直接在浏览器新窗口打开预览链接，恢复原来的预览方式
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${fileId}`
     window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
@@ -155,9 +154,8 @@ class LargeFilePreviewer {
    * @param {string} fileName 文件名
    */
   openVideoPreview(fileId, fileName) {
-    // 实现视频预览：创建一个新窗口，加载视频预览页面
-    // 使用history模式URL，不带#号
-    const previewUrl = `${window.location.origin}/video-preview?fileId=${fileId}&fileName=${encodeURIComponent(fileName)}`
+    // 直接在浏览器新窗口打开视频预览链接，恢复原来的预览方式
+    const previewUrl = `${window.location.origin}/api/info/preview?id=${fileId}`
     window.open(previewUrl, fileName, 'width=1000,height=800')
   }
 
@@ -189,21 +187,31 @@ class LargeFilePreviewer {
     const checkStatus = async () => {
       if (!this.isPreviewing) return
       
-      const previewInfo = await this.initPreview(archive.id)
-      if (previewInfo.convertStatus === 2) {
-        // 转换完成，开始预览
-        this.openPdfPreview(archive.id, archive.fileName)
-      } else if (previewInfo.convertStatus === 3) {
-        // 转换失败
-        ElMessage.error('文件转换失败，无法预览')
+      try {
+        // 直接调用预览信息接口，不触发转换
+        const response = await getPreviewInfoApi(archive.id)
+        const previewInfo = response.data
+        
+        if (previewInfo.convertStatus === 2) {
+          // 转换完成，开始预览
+          this.openPdfPreview(archive.id, archive.fileName)
+          this.isPreviewing = false
+        } else if (previewInfo.convertStatus === 3) {
+          // 转换失败
+          ElMessage.error('文件转换失败，无法预览')
+          this.isPreviewing = false
+        } else {
+          // 继续等待
+          setTimeout(checkStatus, 2000)
+        }
+      } catch (error) {
+        ElMessage.error('检查转换状态失败: ' + error.message)
         this.isPreviewing = false
-      } else {
-        // 继续等待
-        setTimeout(checkStatus, 2000)
       }
     }
     
-    setTimeout(checkStatus, 2000)
+    // 立即开始检查，而不是等待2秒
+    checkStatus()
   }
 
   /**

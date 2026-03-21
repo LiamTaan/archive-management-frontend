@@ -86,6 +86,20 @@
               </el-form-item>
             </el-form>
 
+            <!-- 进度显示 -->
+            <div class="progress-info" v-if="manualProgress">
+              <el-divider />
+              <h3>采集进度</h3>
+              <el-progress :percentage="manualProgress.progress" :status="manualProgress.status === 1 ? 'success' : (manualProgress.status === 2 ? 'exception' : 'active')" :stroke-width="20" show-text>
+                <template #text>
+                  <span>{{ manualProgress.description }}</span>
+                </template>
+              </el-progress>
+              <div class="progress-details" style="margin-top: 10px;">
+                <span>已处理：{{ manualProgress.processedCount }}/{{ manualProgress.totalCount }}</span>
+              </div>
+            </div>
+
             <div class="result-info" v-if="manualResult">
               <el-divider />
               <h3>采集结果</h3>
@@ -131,6 +145,20 @@
               </el-form-item>
             </el-form>
 
+            <!-- 进度显示 -->
+            <div class="progress-info" v-if="batchProgress">
+              <el-divider />
+              <h3>采集进度</h3>
+              <el-progress :percentage="batchProgress.progress" :status="batchProgress.status === 1 ? 'success' : (batchProgress.status === 2 ? 'exception' : 'active')" :stroke-width="20" show-text>
+                <template #text>
+                  <span>{{ batchProgress.description }}</span>
+                </template>
+              </el-progress>
+              <div class="progress-details" style="margin-top: 10px;">
+                <span>已处理：{{ batchProgress.processedCount }}/{{ batchProgress.totalCount }}</span>
+              </div>
+            </div>
+
             <div class="result-info" v-if="batchResult">
               <el-divider />
               <h3>采集结果</h3>
@@ -175,6 +203,20 @@
                 <el-button @click="resetExternalForm">重置</el-button>
               </el-form-item>
             </el-form>
+
+            <!-- 进度显示 -->
+            <div class="progress-info" v-if="externalProgress">
+              <el-divider />
+              <h3>采集进度</h3>
+              <el-progress :percentage="externalProgress.progress" :status="externalProgress.status === 1 ? 'success' : (externalProgress.status === 2 ? 'exception' : 'active')" :stroke-width="20" show-text>
+                <template #text>
+                  <span>{{ externalProgress.description }}</span>
+                </template>
+              </el-progress>
+              <div class="progress-details" style="margin-top: 10px;">
+                <span>已处理：{{ externalProgress.processedCount }}/{{ externalProgress.totalCount }}</span>
+              </div>
+            </div>
 
             <div class="result-info" v-if="externalResult">
               <el-divider />
@@ -413,27 +455,38 @@ const handleManualUpload = async () => {
   }
 
   try {
-    const metadata = '{"title":"手动上传测试","author":"user"}'
-    const operateBy = 'user'
-    let successCount = 0
+    // 创建FormData
+    const formData = new FormData()
+    formData.append('archiveType', manualForm.archiveType)
+    formData.append('metadata', '{"title":"手动上传测试","author":"user"}')
+    formData.append('operateBy', 'user')
+    // 添加文件
+    manualFiles.value.forEach(fileItem => {
+      formData.append('files', fileItem.raw)
+    })
     
-    // 使用分片上传每个文件
-    for (const fileItem of manualFiles.value) {
-      const success = await uploadFileInChunks(fileItem.raw, 'manual', manualForm.archiveType, metadata, operateBy)
-      if (success) {
-        successCount++
+    // 调用手动上传API
+    const response = await manualUploadApi(formData)
+    if (response.code === 200) {
+      manualResult.value = response.data
+      // 如果返回了taskId，开始查询进度
+      if (response.data.taskId) {
+        // 清除之前的进度
+        manualProgress.value = null
+        // 设置定时器，每秒查询一次进度
+        if (progressInterval.value) {
+          clearInterval(progressInterval.value)
+        }
+        progressInterval.value = setInterval(() => {
+          checkProgress(response.data.taskId, manualProgress, manualResult)
+        }, 1000)
+        // 立即查询一次进度
+        checkProgress(response.data.taskId, manualProgress, manualResult)
       }
+      ElMessage.success('手动上传成功')
+    } else {
+      ElMessage.error('手动上传失败：' + response.message)
     }
-    
-    // 更新结果
-    manualResult.value = {
-      totalCount: manualFiles.value.length,
-      successCount: successCount,
-      failCount: manualFiles.value.length - successCount,
-      description: `手动上传完成，成功${successCount}个，失败${manualFiles.value.length - successCount}个`
-    }
-    
-    ElMessage.success('手动上传完成')
   } catch (error) {
     ElMessage.error('手动上传失败：' + error.message)
   }
@@ -443,6 +496,12 @@ const resetManualForm = () => {
   manualForm.archiveType = ''
   manualFiles.value = []
   manualResult.value = null
+  manualProgress.value = null
+  // 清除定时器
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value)
+    progressInterval.value = null
+  }
 }
 
 // 批量上传
@@ -452,6 +511,7 @@ const batchForm = reactive({
 
 const batchFiles = ref([])
 const batchResult = ref(null)
+const batchProgress = ref(null)
 
 const handleBatchFileChange = (file) => {
   batchFiles.value.push(file)
@@ -469,27 +529,38 @@ const handleBatchUpload = async () => {
   }
 
   try {
-    const metadata = '{"title":"批量上传测试","author":"user"}'
-    const operateBy = 'user'
-    let successCount = 0
+    // 创建FormData
+    const formData = new FormData()
+    formData.append('archiveType', batchForm.archiveType)
+    formData.append('metadata', '{"title":"批量上传测试","author":"user"}')
+    formData.append('operateBy', 'user')
+    // 添加文件
+    batchFiles.value.forEach(fileItem => {
+      formData.append('files', fileItem.raw)
+    })
     
-    // 使用分片上传每个文件
-    for (const fileItem of batchFiles.value) {
-      const success = await uploadFileInChunks(fileItem.raw, 'batch', batchForm.archiveType, metadata, operateBy)
-      if (success) {
-        successCount++
+    // 调用批量上传API
+    const response = await batchUploadApi(formData)
+    if (response.code === 200) {
+      batchResult.value = response.data
+      // 如果返回了taskId，开始查询进度
+      if (response.data.taskId) {
+        // 清除之前的进度
+        batchProgress.value = null
+        // 设置定时器，每秒查询一次进度
+        if (progressInterval.value) {
+          clearInterval(progressInterval.value)
+        }
+        progressInterval.value = setInterval(() => {
+          checkProgress(response.data.taskId, batchProgress, batchResult)
+        }, 1000)
+        // 立即查询一次进度
+        checkProgress(response.data.taskId, batchProgress, batchResult)
       }
+      ElMessage.success('批量上传成功')
+    } else {
+      ElMessage.error('批量上传失败：' + response.message)
     }
-    
-    // 更新结果
-    batchResult.value = {
-      totalCount: batchFiles.value.length,
-      successCount: successCount,
-      failCount: batchFiles.value.length - successCount,
-      description: `批量上传完成，成功${successCount}个，失败${batchFiles.value.length - successCount}个`
-    }
-    
-    ElMessage.success('批量上传完成')
   } catch (error) {
     ElMessage.error('批量上传失败：' + error.message)
   }
@@ -499,6 +570,12 @@ const resetBatchForm = () => {
   batchForm.archiveType = ''
   batchFiles.value = []
   batchResult.value = null
+  batchProgress.value = null
+  // 清除定时器
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value)
+    progressInterval.value = null
+  }
 }
 
 // 外部导入
@@ -508,6 +585,7 @@ const externalForm = reactive({
 
 const externalFiles = ref([])
 const externalResult = ref(null)
+const externalProgress = ref(null)
 
 const handleExternalFileChange = (file) => {
   externalFiles.value = [file]
@@ -525,27 +603,38 @@ const handleExternalImport = async () => {
   }
 
   try {
-    const metadata = '{"title":"外部导入测试","author":"user"}'
-    const operateBy = 'user'
-    let successCount = 0
+    // 创建FormData
+    const formData = new FormData()
+    formData.append('archiveType', externalForm.archiveType)
+    formData.append('metadata', '{"title":"外部导入测试","author":"user"}')
+    formData.append('operateBy', 'user')
+    // 添加文件
+    externalFiles.value.forEach(fileItem => {
+      formData.append('files', fileItem.raw)
+    })
     
-    // 使用分片上传每个文件
-    for (const fileItem of externalFiles.value) {
-      const success = await uploadFileInChunks(fileItem.raw, 'external', externalForm.archiveType, metadata, operateBy)
-      if (success) {
-        successCount++
+    // 调用外部导入API
+    const response = await externalImportApi(formData)
+    if (response.code === 200) {
+      externalResult.value = response.data
+      // 如果返回了taskId，开始查询进度
+      if (response.data.taskId) {
+        // 清除之前的进度
+        externalProgress.value = null
+        // 设置定时器，每秒查询一次进度
+        if (progressInterval.value) {
+          clearInterval(progressInterval.value)
+        }
+        progressInterval.value = setInterval(() => {
+          checkProgress(response.data.taskId, externalProgress, externalResult)
+        }, 1000)
+        // 立即查询一次进度
+        checkProgress(response.data.taskId, externalProgress, externalResult)
       }
+      ElMessage.success('外部导入成功')
+    } else {
+      ElMessage.error('外部导入失败：' + response.message)
     }
-    
-    // 更新结果
-    externalResult.value = {
-      totalCount: externalFiles.value.length,
-      successCount: successCount,
-      failCount: externalFiles.value.length - successCount,
-      description: `外部导入完成，成功${successCount}个，失败${externalFiles.value.length - successCount}个`
-    }
-    
-    ElMessage.success('外部导入完成')
   } catch (error) {
     ElMessage.error('外部导入失败：' + error.message)
   }
@@ -555,6 +644,12 @@ const resetExternalForm = () => {
   externalForm.archiveType = ''
   externalFiles.value = []
   externalResult.value = null
+  externalProgress.value = null
+  // 清除定时器
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value)
+    progressInterval.value = null
+  }
 }
 
 const handleTabClick = (tab) => {
