@@ -12,13 +12,21 @@
         <!-- PDF预览区域 -->
         <div class="pdf-viewer" v-if="previewInfo">
           <!-- 页码导航 -->
-          <div class="page-navigation">
+          <div class="page-navigation" v-if="previewInfo.params.totalPages > 0">
             <el-pagination
               v-model:current-page="currentPage"
               :page-size="1"
               :total="previewInfo.params.totalPages"
               layout="prev, pager, next, jumper"
               @current-change="handlePageChange"
+            />
+          </div>
+          <div class="page-navigation" v-else>
+            <el-alert
+              title="提示"
+              type="info"
+              description="无法获取总页数，将加载完整PDF"
+              :closable="false"
             />
           </div>
 

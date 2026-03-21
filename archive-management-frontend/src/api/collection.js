@@ -96,3 +96,12 @@ export const checkChunkApi = (fileMd5, chunkIndex) => {
 export const checkFileApi = (fileMd5) => {
   return request.get('/chunk/checkFile', { params: { fileMd5 } })
 }
+
+/**
+ * 查询采集进度
+ * @param {string} taskId 任务ID
+ * @returns {Promise}
+ */
+export const getCollectionProgressApi = (taskId) => {
+  return request.get(`/collection/progress/${taskId}`)
+}

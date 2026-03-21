@@ -27,6 +27,20 @@
               </el-form-item>
             </el-form>
 
+            <!-- 进度显示 -->
+            <div class="progress-info" v-if="autoProgress">
+              <el-divider />
+              <h3>采集进度</h3>
+              <el-progress :percentage="autoProgress.progress" :status="autoProgress.status === 1 ? 'success' : (autoProgress.status === 2 ? 'exception' : 'active')" :stroke-width="20" show-text>
+                <template #text>
+                  <span>{{ autoProgress.description }}</span>
+                </template>
+              </el-progress>
+              <div class="progress-details" style="margin-top: 10px;">
+                <span>已处理：{{ autoProgress.processedCount }}/{{ autoProgress.totalCount }}</span>
+              </div>
+            </div>
+
             <div class="result-info" v-if="autoResult">
               <el-divider />
               <h3>采集结果</h3>
@@ -182,7 +196,7 @@
 <script setup>
 import { ref, reactive, onMounted, h } from 'vue'
 import { ElMessage, ElProgress } from 'element-plus'
-import { autoCollectApi, manualUploadApi, batchUploadApi, externalImportApi, uploadChunkApi, mergeChunksApi, checkChunkApi, checkFileApi } from '../api/collection'
+import { autoCollectApi, manualUploadApi, batchUploadApi, externalImportApi, uploadChunkApi, mergeChunksApi, checkChunkApi, checkFileApi, getCollectionProgressApi } from '../api/collection'
 import { getInterfaceConfigsApi } from '../api/interfaceConfig'
 
 // 分片大小（10MB）
@@ -308,6 +322,27 @@ const autoForm = reactive({
 })
 
 const autoResult = ref(null)
+const autoProgress = ref(null)
+const progressInterval = ref(null)
+
+// 进度查询函数
+const checkProgress = async (taskId, progressRef, resultRef) => {
+  try {
+    const response = await getCollectionProgressApi(taskId)
+    if (response.code === 200) {
+      progressRef.value = response.data
+      // 如果进度已完成或失败，停止查询
+      if (response.data.status === 1 || response.data.status === 2) {
+        if (progressInterval.value) {
+          clearInterval(progressInterval.value)
+          progressInterval.value = null
+        }
+      }
+    }
+  } catch (error) {
+    console.error('查询进度失败：', error)
+  }
+}
 
 const handleAutoCollect = async () => {
   if (!autoForm.interfaceId) {
@@ -319,6 +354,20 @@ const handleAutoCollect = async () => {
     const response = await autoCollectApi(autoForm.interfaceId)
     if (response.code === 200) {
       autoResult.value = response.data
+      // 如果返回了taskId，开始查询进度
+      if (response.data.taskId) {
+        // 清除之前的进度
+        autoProgress.value = null
+        // 设置定时器，每秒查询一次进度
+        if (progressInterval.value) {
+          clearInterval(progressInterval.value)
+        }
+        progressInterval.value = setInterval(() => {
+          checkProgress(response.data.taskId, autoProgress, autoResult)
+        }, 1000)
+        // 立即查询一次进度
+        checkProgress(response.data.taskId, autoProgress, autoResult)
+      }
       ElMessage.success('自动采集成功')
     } else {
       ElMessage.error('自动采集失败：' + response.message)
@@ -331,6 +380,12 @@ const handleAutoCollect = async () => {
 const resetAutoForm = () => {
   autoForm.interfaceId = ''
   autoResult.value = null
+  autoProgress.value = null
+  // 清除定时器
+  if (progressInterval.value) {
+    clearInterval(progressInterval.value)
+    progressInterval.value = null
+  }
 }
 
 // 手动上传
@@ -340,6 +395,7 @@ const manualForm = reactive({
 
 const manualFiles = ref([])
 const manualResult = ref(null)
+const manualProgress = ref(null)
 
 const handleFileChange = (file) => {
   manualFiles.value.push(file)
