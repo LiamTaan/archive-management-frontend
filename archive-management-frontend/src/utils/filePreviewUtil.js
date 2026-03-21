@@ -109,11 +109,7 @@ class LargeFilePreviewer {
   async openPreview(archive) {
     try {
       // 检查文件大小，对于超大文件给出提示
-      const fileSize = archive.fileSize || 0
       const fileName = archive.fileName || ''
-      
-      // 大文件阈值（50MB）
-      const largeFileThreshold = 50 * 1024 * 1024 // 50MB
       
       // 先检查文件扩展名，直接判断文件类型
       const fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
@@ -121,13 +117,8 @@ class LargeFilePreviewer {
       // 如果是Office文件且文件太大，只给出提示，不进行预览
       const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'vsd', 'dwg']
       if (officeExtensions.includes(fileExtension)) {
-        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，该类型文件不建议预览，只能下载查看`)
+        ElMessage.warning(`该类型文件不建议预览，只能下载查看`)
         return
-      }
-      
-      // 其他文件类型的大文件提示
-      if (fileSize > largeFileThreshold) {
-        ElMessage.warning(`文件大小为 ${(fileSize / (1024 * 1024)).toFixed(2)} MB，建议直接下载后查看，可能需要较长时间加载`)
       }
       
       // 如果是PDF文件，直接使用PDF预览方式
