@@ -173,7 +173,7 @@ const fetchNotifications = async () => {
     } else if (activeFilter.value === 'system') {
       params.type = 0
     } else if (activeFilter.value === 'business') {
-      params.type != 0
+      params.type = 1
     }
     
     const response = await getNotifications(params)
