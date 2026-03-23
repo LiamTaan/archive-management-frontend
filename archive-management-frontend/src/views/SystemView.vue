@@ -15,50 +15,54 @@
               新增接口配置
             </el-button>
 
-            <el-table :data="interfaces" border style="width: 100%">
-              <el-table-column prop="id" label="ID" width="80" />
-              <el-table-column prop="interfaceName" label="接口名称" width="180" />
-              <el-table-column prop="interfaceCode" label="接口编码" width="150" />
-              <el-table-column prop="businessSystem" label="业务系统" width="150" />
-              <el-table-column prop="interfaceUrl" label="接口URL" width="300" show-overflow-tooltip />
-              <el-table-column prop="metadataUrl" label="元信息URL" width="300" show-overflow-tooltip />
-              <el-table-column prop="requestMethod" label="请求方法" width="100" />
-              <el-table-column prop="transferMode" label="传输模式" width="100" />
-              <el-table-column prop="maxFileSize" label="最大文件大小" width="120" />
-              <el-table-column prop="status" label="状态" width="100">
-                <template #default="scope">
-                  <el-switch
-                    v-model="scope.row.status"
-                    :active-value="1"
-                    :inactive-value="0"
-                    @change="handleStatusChange(scope.row)"
-                  />
-                </template>
-              </el-table-column>
-              <el-table-column prop="createTime" label="创建时间" width="180" />
-              <el-table-column label="操作" width="180">
-                <template #default="scope">
-                  <el-button type="primary" size="small" @click="showEditInterfaceDialog(scope.row)">
-                    <el-icon><Edit /></el-icon>
-                    编辑
-                  </el-button>
-                  <el-button type="danger" size="small" @click="handleDeleteInterface(scope.row.id)">
-                    <el-icon><Delete /></el-icon>
-                    删除
-                  </el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+            <div class="table-section">
+              <el-table :data="interfaces" border style="width: 100%" fit>
+                <el-table-column prop="id" label="ID" min-width="80" />
+                <el-table-column prop="interfaceName" label="接口名称" min-width="180" />
+                <el-table-column prop="interfaceCode" label="接口编码" min-width="150" />
+                <el-table-column prop="businessSystem" label="业务系统" min-width="150" />
+                <el-table-column prop="interfaceUrl" label="接口URL" min-width="300" show-overflow-tooltip />
+                <el-table-column prop="metadataUrl" label="元信息URL" min-width="300" show-overflow-tooltip />
+                <el-table-column prop="requestMethod" label="请求方法" min-width="100" />
+                <el-table-column prop="transferMode" label="传输模式" min-width="100" />
+                <el-table-column prop="maxFileSize" label="最大文件大小" min-width="120" />
+                <el-table-column prop="status" label="状态" min-width="100">
+                  <template #default="scope">
+                    <el-switch
+                      v-model="scope.row.status"
+                      :active-value="1"
+                      :inactive-value="0"
+                      @change="handleStatusChange(scope.row)"
+                    />
+                  </template>
+                </el-table-column>
+                <el-table-column prop="createTime" label="创建时间" min-width="180" />
+                <el-table-column label="操作" min-width="180">
+                  <template #default="scope">
+                    <el-button type="primary" size="small" @click="showEditInterfaceDialog(scope.row)">
+                      <el-icon><Edit /></el-icon>
+                      编辑
+                    </el-button>
+                    <el-button type="danger" size="small" @click="handleDeleteInterface(scope.row.id)">
+                      <el-icon><Delete /></el-icon>
+                      删除
+                    </el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
 
-            <el-pagination
-              v-if="interfaceTotal > 0"
-              v-model:current-page="currentPage"
-              :page-size="pageSize"
-              :total="interfaceTotal"
-              layout="prev, pager, next"
-              @update:current-page="handlePageChange"
-              style="margin-top: 20px; text-align: right;"
-            />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="interfaceTotal"
+                  @size-change="handleSizeChange"
+                  @current-change="handlePageChange"
+                />
+              </div>
+            </div>
 
             <!-- 新增/编辑接口配置对话框 -->
             <el-dialog v-model="interfaceDialogVisible" title="接口配置" width="60%">

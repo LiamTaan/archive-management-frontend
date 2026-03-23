@@ -12,77 +12,91 @@
       </template>
 
       <!-- 搜索表单 -->
-      <el-form :model="searchForm" label-width="80px" :inline="true" style="margin-bottom: 20px;">
-        <el-form-item label="用户名">
-          <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="启用" value="1" />
-            <el-option label="禁用" value="0" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-section">
+        <el-form :model="searchForm" label-width="80px" :inline="true">
+          <el-form-item label="用户名">
+            <el-input v-model="searchForm.username" placeholder="请输入用户名" clearable /> 
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+              <el-option label="启用" value="1" /> 
+              <el-option label="禁用" value="0" /> 
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
 
       <!-- 用户列表 -->
-      <el-table :data="users" border style="width: 100%">
-        <el-table-column prop="userId" label="用户ID" width="100" />
-        <el-table-column prop="username" label="用户名" width="150" />
-        <el-table-column prop="nickname" label="昵称" width="150" />
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="phone" label="手机号" width="150" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="scope">
-            <el-switch
-              v-model="scope.row.status"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(scope.row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="200" />
-        <el-table-column label="操作" width="180">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <div class="button-row">
-                <el-button type="primary" size="small" @click="showEditUserDialog(scope.row)">
-                  <el-icon><Edit /></el-icon>
-                  编辑
-                </el-button>
-                <el-button type="warning" size="small" @click="showAssignRolesDialog(scope.row)">
-                  <el-icon><User /></el-icon>
-                  分配角色
-                </el-button>
+      <div class="table-section">
+        <div class="table-container">
+          <el-table :data="users" border style="width: 100%;" fit>
+          <el-table-column prop="userId" label="用户ID" min-width="80" /> 
+          <el-table-column prop="username" label="用户名" min-width="100" />
+          <el-table-column prop="nickname" label="昵称" min-width="100" />
+          <el-table-column prop="email" label="邮箱" min-width="150" />
+          <el-table-column prop="phone" label="手机号" min-width="110" />
+          <el-table-column label="所属部门" min-width="100">
+            <template #default="scope">
+              {{ getDeptName(scope.row.deptId) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" min-width="80">
+            <template #default="scope">
+              <el-switch
+                v-model="scope.row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(scope.row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" min-width="140" />
+          <el-table-column label="操作" min-width="150">
+            <template #default="scope">
+              <div class="operation-buttons">
+                <div class="button-row">
+                  <el-button type="primary" size="small" @click="showEditUserDialog(scope.row)">
+                    <el-icon><Edit /></el-icon>
+                    编辑
+                  </el-button>
+                  <el-button type="warning" size="small" @click="showAssignRolesDialog(scope.row)">
+                    <el-icon><User /></el-icon>
+                    分配角色
+                  </el-button>
+                </div>
+                <div class="button-row">
+                  <el-button type="danger" size="small" @click="handleDeleteUser(scope.row.userId)">
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                  <el-button type="info" size="small" @click="showResetPasswordDialog(scope.row)">
+                    <el-icon><Key /></el-icon>
+                    重置密码
+                  </el-button>
+                </div>
               </div>
-              <div class="button-row">
-                <el-button type="danger" size="small" @click="handleDeleteUser(scope.row.userId)">
-                  <el-icon><Delete /></el-icon>
-                  删除
-                </el-button>
-                <el-button type="info" size="small" @click="showResetPasswordDialog(scope.row)">
-                  <el-icon><Key /></el-icon>
-                  重置密码
-                </el-button>
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+        </el-table>
+        </div>
 
-      <!-- 分页 -->
-      <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next"
-        @update:current-page="handlePageChange"
-        style="margin-top: 20px; text-align: right;"
-      />
+        <!-- 分页 -->
+        <div class="pagination-section">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </div>
 
       <!-- 新增/编辑用户对话框 -->
       <el-dialog v-model="userDialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="50%">
@@ -110,6 +124,16 @@
               <el-option label="启用" value="1" />
               <el-option label="禁用" value="0" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="部门" prop="deptId">
+            <el-tree-select
+              v-model="userForm.deptId"
+              :data="deptOptions"
+              :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+              placeholder="请选择部门"
+              node-key="deptId"
+              check-strictly
+            />
           </el-form-item>
         </el-form>
         <template #footer>
@@ -169,9 +193,10 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElTreeSelect } from 'element-plus'
 import { Plus, Edit, Delete, User, Key } from '@element-plus/icons-vue'
 import { getUserListApi, updateUserStatusApi, addUserApi, updateUserApi, deleteUserApi, getAllRolesApi, getUserRolesApi, saveUserRolesApi, resetPasswordApi } from '../api/user'
+import { getDeptTreeApi } from '../api/dept'
 import { transformPageRequest, transformPageResponse } from '../utils/pagination'
 
 // 搜索表单
@@ -186,6 +211,9 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 
+// 部门列表
+const deptOptions = ref([])
+
 // 对话框
 const userDialogVisible = ref(false)
 const isEdit = ref(false)
@@ -198,7 +226,8 @@ const userForm = reactive({
   nickname: '',
   email: '',
   phone: '',
-  status: '1'
+  status: '1',
+  deptId: ''
 })
 
 // 角色分配对话框
@@ -290,6 +319,39 @@ const getUsers = async () => {
   }
 }
 
+// 加载部门列表
+const loadDepts = async () => {
+  try {
+    const response = await getDeptTreeApi()
+    // 直接使用树状结构数据
+    deptOptions.value = response.data || []
+  } catch (error) {
+    ElMessage.error('获取部门列表失败')
+  }
+}
+
+// 根据部门ID获取部门名称
+const getDeptName = (deptId) => {
+  if (!deptId) return ''
+  
+  // 在树状结构中递归查找部门
+  const findDeptById = (depts, id) => {
+    for (const dept of depts) {
+      if (Number(dept.deptId) === Number(id)) {
+        return dept
+      }
+      if (dept.children && dept.children.length > 0) {
+        const found = findDeptById(dept.children, id)
+        if (found) return found
+      }
+    }
+    return null
+  }
+  
+  const dept = findDeptById(deptOptions.value, deptId)
+  return dept ? dept.deptName : ''
+}
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
@@ -341,6 +403,7 @@ const resetUserForm = () => {
     userForm[key] = ''
   })
   userForm.status = '1'
+  userForm.deptId = ''
 }
 
 // 保存用户
@@ -458,9 +521,10 @@ const handleResetPassword = async () => {
   })
 }
 
-// 页面加载时获取用户列表
+// 页面加载时获取用户列表和部门列表
 onMounted(() => {
   getUsers()
+  loadDepts()
 })
 </script>
 
@@ -473,6 +537,12 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 16px;
 }
 
 .operation-buttons {

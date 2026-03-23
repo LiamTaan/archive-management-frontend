@@ -91,12 +91,20 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="责任人">
-                    <el-input v-model="manualForm.responsiblePerson" placeholder="请输入责任人" />
+                    <el-input v-model="manualForm.responsiblePerson" placeholder="请输入责任人" disabled />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="所属部门">
-                    <el-input v-model="manualForm.department" placeholder="请输入所属部门" />
+                    <el-tree-select
+                      v-model="manualForm.deptId"
+                      :data="deptOptions"
+                      :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+                      placeholder="请选择所属部门"
+                      node-key="deptId"
+                      check-strictly
+                      @change="handleDeptChange($event, 'manual')"
+                    />
                   </el-form-item>
                 </el-col>
 
@@ -176,12 +184,20 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="责任人">
-                    <el-input v-model="batchForm.responsiblePerson" placeholder="请输入责任人" />
+                    <el-input v-model="batchForm.responsiblePerson" placeholder="请输入责任人" disabled />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="所属部门">
-                    <el-input v-model="batchForm.department" placeholder="请输入所属部门" />
+                    <el-tree-select
+                      v-model="batchForm.deptId"
+                      :data="deptOptions"
+                      :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+                      placeholder="请选择所属部门"
+                      node-key="deptId"
+                      check-strictly
+                      @change="handleDeptChange($event, 'batch')"
+                    />
                   </el-form-item>
                 </el-col>
 
@@ -261,12 +277,20 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="责任人">
-                    <el-input v-model="externalForm.responsiblePerson" placeholder="请输入责任人" />
+                    <el-input v-model="externalForm.responsiblePerson" placeholder="请输入责任人" disabled />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="所属部门">
-                    <el-input v-model="externalForm.department" placeholder="请输入所属部门" />
+                    <el-tree-select
+                      v-model="externalForm.deptId"
+                      :data="deptOptions"
+                      :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+                      placeholder="请选择所属部门"
+                      node-key="deptId"
+                      check-strictly
+                      @change="handleDeptChange($event, 'external')"
+                    />
                   </el-form-item>
                 </el-col>
 
@@ -315,9 +339,10 @@
 
 <script setup>
 import { ref, reactive, onMounted, h } from 'vue'
-import { ElMessage, ElProgress } from 'element-plus'
+import { ElMessage, ElProgress, ElTreeSelect } from 'element-plus'
 import { autoCollectApi, manualUploadApi, batchUploadApi, externalImportApi, uploadChunkApi, mergeChunksApi, checkChunkApi, checkFileApi, getCollectionProgressApi } from '../api/collection'
 import { getInterfaceConfigsApi } from '../api/interfaceConfig'
+import { getAllDeptsApi } from '../api/dept'
 
 // 分片大小（10MB）
 const CHUNK_SIZE = 10 * 1024 * 1024
@@ -436,6 +461,9 @@ const activeTab = ref('auto')
 // 接口配置列表
 const interfaceOptions = ref([])
 
+// 部门列表
+const deptOptions = ref([])
+
 // 自动采集
 const autoForm = reactive({
   interfaceId: ''
@@ -444,6 +472,36 @@ const autoForm = reactive({
 const autoResult = ref(null)
 const autoProgress = ref(null)
 const progressInterval = ref(null)
+
+// 部门选择变化处理函数
+const handleDeptChange = (deptId, formType) => {
+  // 根据部门ID查找部门名称
+  const findDeptName = (deptList, id) => {
+    for (const dept of deptList) {
+      if (dept.deptId === id) {
+        return dept.deptName
+      }
+      if (dept.children && dept.children.length > 0) {
+        const result = findDeptName(dept.children, id)
+        if (result) {
+          return result
+        }
+      }
+    }
+    return ''
+  }
+  
+  const deptName = findDeptName(deptOptions.value, deptId)
+  
+  // 根据表单类型更新对应的department字段
+  if (formType === 'manual') {
+    manualForm.department = deptName
+  } else if (formType === 'batch') {
+    batchForm.department = deptName
+  } else if (formType === 'external') {
+    externalForm.department = deptName
+  }
+}
 
 // 进度查询函数
 const checkProgress = async (taskId, progressRef, resultRef) => {
@@ -514,6 +572,7 @@ const manualForm = reactive({
   businessType: '',
   responsiblePerson: '',
   department: '',
+  deptId: '',
   remark: ''
 })
 
@@ -540,16 +599,20 @@ const handleManualUpload = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', manualForm.archiveType)
+    formData.append('deptId', manualForm.deptId)
+    // 获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userName = userInfoStr ? JSON.parse(userInfoStr).username : 'unknown'
     // 构建metadata对象，包含所有表单字段
     const metadata = {
       businessType: manualForm.businessType,
       responsiblePerson: manualForm.responsiblePerson,
       department: manualForm.department,
       remark: manualForm.remark,
-      author: 'user'
+      author: userName
     }
     formData.append('metadata', JSON.stringify(metadata))
-    formData.append('operateBy', 'user')
+    formData.append('operateBy', userName)
     // 添加文件
     manualFiles.value.forEach(fileItem => {
       formData.append('files', fileItem.raw)
@@ -600,6 +663,7 @@ const batchForm = reactive({
   businessType: '',
   responsiblePerson: '',
   department: '',
+  deptId: '',
   remark: ''
 })
 
@@ -626,16 +690,20 @@ const handleBatchUpload = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', batchForm.archiveType)
+    formData.append('deptId', batchForm.deptId)
+    // 获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userName = userInfoStr ? JSON.parse(userInfoStr).username : 'unknown'
     // 构建metadata对象，包含所有表单字段
     const metadata = {
       businessType: batchForm.businessType,
       responsiblePerson: batchForm.responsiblePerson,
       department: batchForm.department,
       remark: batchForm.remark,
-      author: 'user'
+      author: userName
     }
     formData.append('metadata', JSON.stringify(metadata))
-    formData.append('operateBy', 'user')
+    formData.append('operateBy', userName)
     // 添加文件
     batchFiles.value.forEach(fileItem => {
       formData.append('files', fileItem.raw)
@@ -686,6 +754,7 @@ const externalForm = reactive({
   businessType: '',
   responsiblePerson: '',
   department: '',
+  deptId: '',
   remark: ''
 })
 
@@ -712,16 +781,20 @@ const handleExternalImport = async () => {
     // 创建FormData
     const formData = new FormData()
     formData.append('archiveType', externalForm.archiveType)
+    formData.append('deptId', externalForm.deptId)
+    // 获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userName = userInfoStr ? JSON.parse(userInfoStr).username : 'unknown'
     // 构建metadata对象，包含所有表单字段
     const metadata = {
       businessType: externalForm.businessType,
       responsiblePerson: externalForm.responsiblePerson,
       department: externalForm.department,
       remark: externalForm.remark,
-      author: 'user'
+      author: userName
     }
     formData.append('metadata', JSON.stringify(metadata))
-    formData.append('operateBy', 'user')
+    formData.append('operateBy', userName)
     // 添加文件
     externalFiles.value.forEach(fileItem => {
       formData.append('files', fileItem.raw)
@@ -786,9 +859,46 @@ const getInterfaceOptions = async () => {
   }
 }
 
-// 组件加载时获取接口配置列表
+// 获取所有部门列表
+const getAllDepartments = async () => {
+  try {
+    const response = await getAllDeptsApi()
+    if (response.code === 200) {
+      // 直接使用树状结构数据，不需要转换为扁平结构
+      deptOptions.value = response.data
+    }
+  } catch (error) {
+    console.error('获取部门列表失败：', error)
+  }
+}
+
+// 组件加载时获取接口配置列表和部门列表
 onMounted(() => {
   getInterfaceOptions()
+  getAllDepartments()
+  
+  // 设置责任人默认值为当前登录用户
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    const userInfo = JSON.parse(userInfoStr)
+    manualForm.responsiblePerson = userInfo.username || ''
+    batchForm.responsiblePerson = userInfo.username || ''
+    externalForm.responsiblePerson = userInfo.username || ''
+    
+    // 设置所属部门默认值为当前登录用户的部门
+    if (userInfo.deptId) {
+      manualForm.deptId = userInfo.deptId
+      batchForm.deptId = userInfo.deptId
+      externalForm.deptId = userInfo.deptId
+      
+      // 延迟一下，确保部门列表已经加载完成，然后更新部门名称
+      setTimeout(() => {
+        handleDeptChange(userInfo.deptId, 'manual')
+        handleDeptChange(userInfo.deptId, 'batch')
+        handleDeptChange(userInfo.deptId, 'external')
+      }, 100)
+    }
+  }
 })
 </script>
 

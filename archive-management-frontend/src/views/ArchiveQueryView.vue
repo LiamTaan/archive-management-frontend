@@ -50,7 +50,11 @@
                 </el-col>
                 <el-col :span="8" v-if="isExpanded || activeVisibleFields.includes('archiveType')">
                   <el-form-item label="档案分类">
-                    <el-input v-model="queryForm.archiveType" placeholder="请输入档案分类" />
+                    <el-select v-model="queryForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
                   </el-form-item>
                 </el-col>
                 <el-col :span="8" v-if="isExpanded || activeVisibleFields.includes('businessNo')">
@@ -129,11 +133,11 @@
             </el-form>
 
             <!-- 查询结果 -->
-            <div class="result-info" v-if="tableData.length > 0 || loading">
-              <el-divider />
+            <div class="table-section">
               <div class="batch-operation">
                 <h3 style="display: inline-block; margin-right: 20px;">查询结果</h3>
                 <el-button 
+                  v-if="isArchiveOper()"
                   type="success" 
                   @click="handleBatchHangOn" 
                   :disabled="selectedRows.length === 0"
@@ -141,34 +145,41 @@
                   批量挂接 ({{ selectedRows.length }})
                 </el-button>
               </div>
-              <el-table :data="tableData" border style="width: 100%" :loading="loading" @selection-change="handleSelectionChange">
-                <el-table-column type="selection" width="55" />
-                <el-table-column prop="id" label="档案ID" width="100" />
-                <el-table-column prop="fileName" label="文件名" width="300" />
-                <el-table-column prop="fileType" label="文件类型" width="100" />
-                <el-table-column label="文件大小" width="120">
+              <el-table :data="tableData" border style="width: 100%" fit :loading="loading" @selection-change="handleSelectionChange">
+                <el-table-column type="selection" min-width="55" />
+                <el-table-column prop="id" label="档案ID" min-width="100" />
+                <el-table-column prop="fileName" label="文件名" min-width="300" />
+                <el-table-column prop="fileType" label="文件类型" min-width="100" />
+                <el-table-column label="文件大小" min-width="120">
                   <template #default="scope">
                     {{ formatFileSize(scope.row.fileSize) }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="archiveType" label="档案分类" width="120" />
-                <el-table-column prop="businessNo" label="业务单号" width="150" />
-                <el-table-column prop="responsiblePerson" label="责任人" width="100" />
-                <el-table-column prop="department" label="所属部门" width="120" />
-                <el-table-column prop="status" label="档案状态" width="100">
+                <el-table-column prop="archiveType" label="档案分类" min-width="120" />
+                <el-table-column prop="businessNo" label="业务单号" min-width="150" />
+                <el-table-column prop="responsiblePerson" label="责任人" min-width="100" />
+                <el-table-column prop="department" label="所属部门" min-width="120" />
+                <el-table-column prop="status" label="档案状态" min-width="100">
                   <template #default="scope">
                     <span :class="getStatusClass(scope.row.status)">
                       {{ getStatusText(scope.row.status) }}
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="hangOnType" label="挂接方式" width="100">
+                <el-table-column prop="approvalStatus" label="审批状态" min-width="120">
+                  <template #default="scope">
+                    <span :class="getApprovalStatusClass(scope.row.approvalStatus)">
+                      {{ getApprovalStatusText(scope.row.approvalStatus) }}
+                    </span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="hangOnType" label="挂接方式" min-width="100">
                   <template #default="scope">
                     {{ scope.row.hangOnType === 0 ? '自动' : '手动' }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="createTime" label="创建时间" width="200" />
-                <el-table-column label="操作" width="250">
+                <el-table-column prop="createTime" label="创建时间" min-width="200" />
+                <el-table-column label="操作" min-width="250">
                   <template #default="scope">
                     <el-button type="primary" size="small" @click="handleViewDetail(scope.row.id)">
                       查看详情
@@ -184,14 +195,17 @@
               </el-table>
 
               <!-- 分页 -->
-              <el-pagination
-                v-model:current-page="currentPage"
-                :page-size="pageSize"
-                :total="total"
-                layout="prev, pager, next"
-                @update:current-page="handlePageChange"
-                style="margin-top: 20px; text-align: right;"
-              />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="total"
+                  @size-change="handleSizeChange"
+                  @current-change="handlePageChange"
+                />
+              </div>
             </div>
           </div>
         </el-tab-pane>
@@ -216,6 +230,11 @@
                 <el-descriptions-item v-if="detailInfo" label="档案状态">
                   <span :class="getStatusClass(detailInfo.status)">
                     {{ getStatusText(detailInfo.status) }}
+                  </span>
+                </el-descriptions-item>
+                <el-descriptions-item v-if="detailInfo" label="审批状态">
+                  <span :class="getApprovalStatusClass(detailInfo.approvalStatus)">
+                    {{ getApprovalStatusText(detailInfo.approvalStatus) }}
                   </span>
                 </el-descriptions-item>
                 <el-descriptions-item v-if="detailInfo" label="创建时间">{{ detailInfo.createTime }}</el-descriptions-item>
@@ -316,6 +335,26 @@ const toggleExpand = () => {
 // 批量操作
 const selectedRows = ref([])
 
+// 当前用户信息
+const currentUserInfo = ref(null)
+
+// 获取当前用户信息
+const getCurrentUserInfo = () => {
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    currentUserInfo.value = JSON.parse(userInfoStr)
+  }
+}
+
+// 判断是否为档案经办人
+const isArchiveOper = () => {
+  if (!currentUserInfo.value || !currentUserInfo.value.roles) {
+    return false
+  }
+  // 检查用户是否有档案经办人角色（ARCHIVE_OPER）
+  return currentUserInfo.value.roles.includes('ARCHIVE_OPER')
+}
+
 // 批量挂接对话框
 const batchHangOnDialogVisible = ref(false)
 const batchHangOnLoading = ref(false)
@@ -374,6 +413,17 @@ const handleQuery = async () => {
     }
     if (queryForm.maxFileSize) {
       queryDTO.maxFileSize = parseInt(queryForm.maxFileSize) * 1024
+    }
+    
+    // 获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    if (userInfoStr) {
+      const userInfo = JSON.parse(userInfoStr)
+      // 添加用户信息到查询条件中，用于后端权限控制
+      queryDTO.userId = userInfo.userId || userInfo.id
+      queryDTO.username = userInfo.username
+      queryDTO.userDept = userInfo.deptId || userInfo.departmentId
+      queryDTO.userRoles = userInfo.roles || []
     }
     
     // 调用API
@@ -452,12 +502,36 @@ const getStatusText = (status) => {
   }
 }
 
+// 获取审批状态文本
+const getApprovalStatusText = (status) => {
+  switch (status) {
+    case 0: return '待审批'
+    case 1: return '部门审核通过'
+    case 2: return '档案复核通过'
+    case 3: return '已入库'
+    case 4: return '驳回'
+    default: return '未知'
+  }
+}
+
 // 获取状态样式
 const getStatusClass = (status) => {
   switch (status) {
     case 0: return 'status-pending'
     case 1: return 'status-success'
     case 2: return 'status-fail'
+    default: return ''
+  }
+}
+
+// 获取审批状态样式
+const getApprovalStatusClass = (status) => {
+  switch (status) {
+    case 0: return 'approval-status-pending'
+    case 1: return 'approval-status-success'
+    case 2: return 'approval-status-success'
+    case 3: return 'approval-status-success'
+    case 4: return 'approval-status-fail'
     default: return ''
   }
 }
@@ -613,6 +687,7 @@ const confirmBatchHangOn = async () => {
 onMounted(() => {
   handleQuery()
   getSystemOptions()
+  getCurrentUserInfo()
 })
 </script>
 
@@ -652,6 +727,18 @@ onMounted(() => {
 }
 
 .status-fail {
+  color: #f56c6c;
+}
+
+.approval-status-success {
+  color: #67c23a;
+}
+
+.approval-status-pending {
+  color: #e6a23c;
+}
+
+.approval-status-fail {
   color: #f56c6c;
 }
 

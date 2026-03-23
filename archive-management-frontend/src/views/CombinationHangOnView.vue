@@ -193,7 +193,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import archiveCombinationApi from '../api/archiveCombination'
 import { queryArchiveByPageApi } from '../api/archiveInfo'
-import { batchHangOnApi } from '../api/hangOn'
+import { batchHangOnApi, checkHangOnValidApi } from '../api/hangOn'
 import { getInterfaceConfigsApi } from '../api/interfaceConfig'
 import { transformPageRequest, transformPageResponse } from '../utils/pagination'
 
@@ -324,6 +324,17 @@ const handleQuery = () => {
     pageSize: pageSize.value
   }
   
+  // 获取当前登录用户信息
+  const userInfoStr = localStorage.getItem('userInfo')
+  if (userInfoStr) {
+    const userInfo = JSON.parse(userInfoStr)
+    // 添加用户信息到查询条件中，用于后端权限控制
+    queryDTO.userId = userInfo.userId || userInfo.id
+    queryDTO.username = userInfo.username
+    queryDTO.userDept = userInfo.deptId || userInfo.departmentId
+    queryDTO.userRoles = userInfo.roles || []
+  }
+  
   // 调用API获取档案组合列表
   archiveCombinationApi.getArchiveCombinationList(queryDTO).then(res => {
     const pageData = transformPageResponse(res.data)
@@ -425,12 +436,18 @@ const handleSubmitHangOn = () => {
             return typeof relation.archiveId === 'string' ? relation.archiveId : parseInt(relation.archiveId)
           })
           
-          // 调用专门的批量挂接API
-          batchHangOnApi({
+          // 调用校验接口
+          checkHangOnValidApi({
             archiveIds: archiveIds,
-            systemCode: hangOnForm.systemCode,
-            operateBy: operateBy,
-            hangOnMethod: hangOnForm.hangOnMethod
+            systemCode: hangOnForm.systemCode
+          }).then(() => {
+            // 校验通过，执行挂接
+            return batchHangOnApi({
+              archiveIds: archiveIds,
+              systemCode: hangOnForm.systemCode,
+              operateBy: operateBy,
+              hangOnMethod: hangOnForm.hangOnMethod
+            })
           }).then(res => {
             // 挂接成功，更新组合状态为已挂接(1)
             return archiveCombinationApi.updateArchiveCombination({
@@ -530,12 +547,27 @@ const handleSubmitAdd = () => {
 const remoteMethod = (query) => {
   if (query !== '') {
     selectLoading.value = true
-    // 调用实际的档案搜索API
-    queryArchiveByPageApi({
+    
+    // 构建查询参数
+    const queryDTO = {
       pageNum: 1,
       pageSize: 10,
       fileName: query // 根据实际API参数调整
-    }).then(res => {
+    }
+    
+    // 获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    if (userInfoStr) {
+      const userInfo = JSON.parse(userInfoStr)
+      // 添加用户信息到查询条件中，用于后端权限控制
+      queryDTO.userId = userInfo.userId || userInfo.id
+      queryDTO.username = userInfo.username
+      queryDTO.userDept = userInfo.deptId || userInfo.departmentId
+      queryDTO.userRoles = userInfo.roles || []
+    }
+    
+    // 调用实际的档案搜索API
+    queryArchiveByPageApi(queryDTO).then(res => {
       selectLoading.value = false
       archiveOptions.value = res.data.records.map(item => ({
         label: item.fileName || `档案-${item.id}`,

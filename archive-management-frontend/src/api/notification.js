@@ -13,7 +13,7 @@ export const getNotifications = (params) => {
 // 标记通知为已读
 export const markNotificationAsRead = (id) => {
   return request({
-    url: `/notification/read/${id}`,
+    url: `/notification/${id}/read`,
     method: 'put'
   })
 }
@@ -21,16 +21,16 @@ export const markNotificationAsRead = (id) => {
 // 批量标记通知为已读
 export const batchMarkAsRead = (ids) => {
   return request({
-    url: '/notification/batch-read',
+    url: '/notification/batch/read',
     method: 'put',
-    data: { ids }
+    data: ids
   })
 }
 
 // 删除通知
 export const deleteNotification = (id) => {
   return request({
-    url: `/notification/delete/${id}`,
+    url: `/notification/${id}`,
     method: 'delete'
   })
 }
@@ -38,8 +38,8 @@ export const deleteNotification = (id) => {
 // 批量删除通知
 export const batchDeleteNotifications = (ids) => {
   return request({
-    url: '/notification/batch-delete',
+    url: '/notification/batch',
     method: 'delete',
-    data: { ids }
+    data: ids
   })
 }

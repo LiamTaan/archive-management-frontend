@@ -15,7 +15,7 @@
                 <el-input v-model="manualForm.archiveId" placeholder="请输入档案ID" />
               </el-form-item>
               <el-form-item label="目标系统">
-                <el-select v-model="manualForm.systemCode" placeholder="请选择目标系统">
+                <el-select v-model="manualForm.systemCode" placeholder="请选择目标系统" multiple>
                   <el-option
                     v-for="option in systemOptions"
                     :key="option.value"
@@ -25,7 +25,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="操作人">
-                <el-input v-model="manualForm.operateBy" placeholder="请输入操作人" />
+                <el-input v-model="manualForm.operateBy" placeholder="请输入操作人" disabled />
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="handleManualHangOn" :loading="manualLoading">开始挂接</el-button>
@@ -59,7 +59,7 @@
                 />
               </el-form-item>
               <el-form-item label="目标系统">
-                <el-select v-model="batchForm.systemCode" placeholder="请选择目标系统">
+                <el-select v-model="batchForm.systemCode" placeholder="请选择目标系统" multiple>
                   <el-option
                     v-for="option in systemOptions"
                     :key="option.value"
@@ -69,7 +69,7 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="操作人">
-                <el-input v-model="batchForm.operateBy" placeholder="请输入操作人" />
+                <el-input v-model="batchForm.operateBy" placeholder="请输入操作人" disabled />
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="handleBatchHangOn" :loading="batchLoading">开始批量挂接</el-button>
@@ -92,28 +92,28 @@
 
         <el-tab-pane label="挂接关系查询" name="relations">
           <div class="tab-content">
-            <el-form :model="relationForm" label-width="120px">
-              <el-form-item label="档案ID">
-                <el-input v-model="relationForm.archiveId" placeholder="请输入档案ID" />
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleGetRelations" :loading="relationsLoading">查询挂接关系</el-button>
-                <el-button @click="resetRelationForm">重置</el-button>
-              </el-form-item>
-            </el-form>
+            <div class="filter-section">
+              <el-form :model="relationForm" label-width="120px">
+                <el-form-item label="档案ID">
+                  <el-input v-model="relationForm.archiveId" placeholder="请输入档案ID" />
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleGetRelations" :loading="relationsLoading">查询挂接关系</el-button>
+                  <el-button @click="resetRelationForm">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
 
-            <div class="result-info">
-              <el-divider />
-              <h3>挂接关系列表</h3>
-              <el-table :data="relations" border style="width: 100%" :loading="relationsLoading">
-                <el-table-column prop="id" label="ID" width="80" />
-                <el-table-column prop="archiveId" label="档案ID" width="120" />
-                <el-table-column prop="systemCode" label="系统代码" width="150" />
-                <el-table-column prop="systemName" label="系统名称" width="150" />
-                <el-table-column prop="hangOnTime" label="挂接时间" width="200" />
-                <el-table-column prop="status" label="状态" width="100" />
+            <div class="table-section">
+              <el-table :data="relations" border style="width: 100%" fit :loading="relationsLoading">
+                <el-table-column prop="id" label="ID" min-width="80" />
+                <el-table-column prop="archiveId" label="档案ID" min-width="120" />
+                <el-table-column prop="systemCode" label="系统代码" min-width="150" />
+                <el-table-column prop="systemName" label="系统名称" min-width="150" />
+                <el-table-column prop="hangOnTime" label="挂接时间" min-width="200" />
+                <el-table-column prop="status" label="状态" min-width="100" />
                 <el-table-column prop="operateBy" label="操作人" min-width="100" />
-                <el-table-column label="操作" width="200">
+                <el-table-column label="操作" min-width="200">
                   <template #default="scope">
                     <el-button type="danger" size="small" @click="handleUnhook(scope.row)">
                       解除挂接
@@ -127,63 +127,65 @@
 
         <el-tab-pane label="挂接日志查询" name="logs">
           <div class="tab-content">
-            <el-form :model="logForm" label-width="120px" :inline="true">
-              <el-form-item label="档案ID">
-                <el-input v-model="logForm.archiveId" placeholder="请输入档案ID" />
-              </el-form-item>
-              <el-form-item label="挂接类型">
-                <el-select v-model="logForm.hangOnType" placeholder="请选择挂接类型">
-                  <el-option label="自动挂接" value="1" />
-                  <el-option label="手动挂接" value="2" />
-                  <el-option label="解除挂接" value="3" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="挂接结果">
-                <el-select v-model="logForm.result" placeholder="请选择挂接结果">
-                  <el-option label="成功" value="1" />
-                  <el-option label="失败" value="2" />
-                </el-select>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleGetLogs" :loading="logsLoading">查询日志</el-button>
-                <el-button @click="resetLogForm">重置</el-button>
-              </el-form-item>
-            </el-form>
+            <div class="filter-section">
+              <el-form :model="logForm" label-width="120px" inline>
+                <el-form-item label="档案ID">
+                  <el-input v-model="logForm.archiveId" placeholder="请输入档案ID" />
+                </el-form-item>
+                <el-form-item label="挂接类型">
+                  <el-select v-model="logForm.hangOnType" placeholder="请选择挂接类型">
+                    <el-option label="自动挂接" value="1" />
+                    <el-option label="手动挂接" value="2" />
+                    <el-option label="解除挂接" value="3" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="挂接结果">
+                  <el-select v-model="logForm.result" placeholder="请选择挂接结果">
+                    <el-option label="成功" value="1" />
+                    <el-option label="失败" value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleGetLogs" :loading="logsLoading">查询日志</el-button>
+                  <el-button @click="resetLogForm">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
 
-            <div class="result-info">
-              <el-divider />
-              <h3>挂接日志列表</h3>
-              <el-table :data="logs" border style="width: 100%" :loading="logsLoading">
-                <el-table-column prop="id" label="日志ID" width="100" />
-                <el-table-column prop="archiveId" label="档案ID" width="120" />
-                <el-table-column prop="hangOnType" label="挂接类型" width="100">
+            <div class="table-section">
+              <el-table :data="logs" border style="width: 100%" fit :loading="logsLoading">
+                <el-table-column prop="id" label="日志ID" min-width="100" />
+                <el-table-column prop="archiveId" label="档案ID" min-width="120" />
+                <el-table-column prop="hangOnType" label="挂接类型" min-width="120">
                   <template #default="scope">
                     {{ scope.row.hangOnType === 0 ? '自动挂接' : (scope.row.hangOnType === 1 ? '手动挂接' : '解除挂接') }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="result" label="挂接结果" width="100">
+                <el-table-column prop="result" label="挂接结果" min-width="100">
                   <template #default="scope">
                     <span :class="scope.row.result === 1 ? 'success' : 'fail'">
                       {{ scope.row.result === 1 ? '成功' : '失败' }}
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="operateBy" label="操作人" width="100" />
-                <el-table-column prop="description" label="挂接描述" />
-                <el-table-column prop="errorInfo" label="错误信息" />
-                <el-table-column prop="createTime" label="创建时间" width="200" />
+                <el-table-column prop="operateBy" label="操作人" min-width="100" />
+                <el-table-column prop="description" label="挂接描述" min-width="200"/>
+                <el-table-column prop="errorInfo" label="错误信息" min-width="200"/>
+                <el-table-column prop="createTime" label="创建时间" min-width="200" />
               </el-table>
 
-              <el-pagination
-                v-if="logTotal > 0"
-                v-model:current-page="currentPage"
-                :page-size="pageSize"
-                :total="logTotal"
-                layout="prev, pager, next"
-                @update:current-page="handlePageChange"
-                style="margin-top: 20px; text-align: right;"
-                :loading="logsLoading"
-              />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="currentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="logTotal"
+                  @size-change="handleSizeChange"
+                  @current-change="handlePageChange"
+                  :loading="logsLoading"
+                />
+              </div>
             </div>
           </div>
         </el-tab-pane>
@@ -231,8 +233,14 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { manualHangOnApi, batchHangOnApi, getRelationsApi, getLogsApi, unhookApi, modifyHangOnRelationApi } from '../api/hangOn'
+import { manualHangOnApi, batchHangOnApi, getRelationsApi, getLogsApi, unhookApi, modifyHangOnRelationApi, checkHangOnValidApi } from '../api/hangOn'
 import { getInterfaceConfigsApi } from '../api/interfaceConfig'
+
+// 获取当前登录用户信息
+const getCurrentUser = () => {
+  const userInfoStr = localStorage.getItem('userInfo')
+  return userInfoStr ? JSON.parse(userInfoStr).username : 'unknown'
+}
 
 const activeTab = ref('manual')
 
@@ -243,8 +251,8 @@ const systemOptionsLoading = ref(false)
 // 手动挂接
 const manualForm = reactive({
   archiveId: '',
-  systemCode: '',
-  operateBy: ''
+  systemCode: [],
+  operateBy: getCurrentUser()
 })
 
 const manualResult = ref(null)
@@ -256,17 +264,27 @@ const handleManualHangOn = async () => {
     return
   }
 
-  if (!manualForm.systemCode) {
-    ElMessage.warning('请选择目标系统')
+  if (manualForm.systemCode.length === 0) {
+    ElMessage.warning('请选择至少一个目标系统')
     return
   }
 
   try {
     manualLoading.value = true
+    
+    // 调用校验接口
+    const checkData = {
+      archiveId: parseInt(manualForm.archiveId),
+      systemCode: manualForm.systemCode
+    }
+    await checkHangOnValidApi(checkData)
+    
+    // 校验通过，执行挂接
     const response = await manualHangOnApi(manualForm.archiveId, manualForm.systemCode, manualForm.operateBy)
+    
     if (response.code === 200) {
       manualResult.value = response.data
-      ElMessage.success('手动挂接成功')
+      ElMessage.success(`已成功向 ${manualForm.systemCode.length} 个系统挂接档案`)
     } else {
       ElMessage.error('手动挂接失败：' + response.message)
     }
@@ -279,16 +297,16 @@ const handleManualHangOn = async () => {
 
 const resetManualForm = () => {
   manualForm.archiveId = ''
-  manualForm.systemCode = ''
-  manualForm.operateBy = 'user'
+  manualForm.systemCode = []
+  manualForm.operateBy = getCurrentUser()
   manualResult.value = null
 }
 
 // 批量挂接
 const batchForm = reactive({
   archiveIds: '',
-  systemCode: '',
-  operateBy: 'user'
+  systemCode: [],
+  operateBy: getCurrentUser()
 })
 
 const batchResult = ref(null)
@@ -300,8 +318,8 @@ const handleBatchHangOn = async () => {
     return
   }
 
-  if (!batchForm.systemCode) {
-    ElMessage.warning('请选择目标系统')
+  if (batchForm.systemCode.length === 0) {
+    ElMessage.warning('请选择至少一个目标系统')
     return
   }
 
@@ -313,6 +331,14 @@ const handleBatchHangOn = async () => {
       return
     }
 
+    // 调用校验接口
+    const checkData = {
+      archiveIds,
+      systemCode: batchForm.systemCode
+    }
+    await checkHangOnValidApi(checkData)
+    
+    // 校验通过，执行批量挂接
     const requestDTO = {
       archiveIds,
       systemCode: batchForm.systemCode,
@@ -336,8 +362,8 @@ const handleBatchHangOn = async () => {
 
 const resetBatchForm = () => {
   batchForm.archiveIds = ''
-  batchForm.systemCode = ''
-  batchForm.operateBy = 'user'
+  batchForm.systemCode = []
+  batchForm.operateBy = getCurrentUser()
   batchResult.value = null
 }
 
@@ -370,7 +396,8 @@ const handleGetRelations = async () => {
     relationsLoading.value = false
   }
 }
-// 挂接关系查询
+
+// 挂接关系查询
 const resetRelationForm = () => {
   relationForm.archiveId = ''
   // 重置后不清空列表，保持现有数据显示
@@ -382,7 +409,7 @@ const modifyLoading = ref(false)
 const modifyForm = reactive({
   archiveId: '',
   systemCode: '',
-  operateBy: 'user',
+  operateBy: getCurrentUser(),
   archiveType: '',
   businessNo: '',
   businessType: '',
@@ -395,7 +422,7 @@ const handleModifyRelation = (row) => {
   // 初始化表单数据
   modifyForm.archiveId = row.archiveId
   modifyForm.systemCode = row.systemCode
-  modifyForm.operateBy = 'user'
+  modifyForm.operateBy = getCurrentUser()
   modifyForm.archiveType = ''
   modifyForm.businessNo = ''
   modifyForm.businessType = ''
@@ -493,7 +520,8 @@ const handleGetLogs = async () => {
     logsLoading.value = false
   }
 }
-// 挂接日志查询
+
+// 挂接日志查询
 const resetLogForm = () => {
   logForm.archiveId = ''
   logForm.hangOnType = ''

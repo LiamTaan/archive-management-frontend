@@ -75,7 +75,7 @@ export const getRolePermissionsApi = (roleId) => {
  * @returns {Promise}
  */
 export const saveRolePermissionsApi = (roleId, permissions) => {
-  return request.post(`/role/permissions/${roleId}`, { permissions })
+  return request.post(`/role/permissions/${roleId}`, permissions)
 }
 
 /**

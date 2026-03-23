@@ -11,12 +11,11 @@
             <el-dropdown>
               <span class="user-name">
                 <el-icon><User /></el-icon>
-                {{ userInfo.username || '管理员' }}
+                {{ userInfo.nickname || userInfo.username || '管理员' }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </span>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item>个人中心</el-dropdown-item>
                   <el-dropdown-item @click="showChangePasswordDialog">修改密码</el-dropdown-item>
                   <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
                 </el-dropdown-menu>
@@ -170,20 +169,87 @@ const getMenus = async () => {
     // 在发送请求之前再次检查登录状态
     if (!isLoggedIn.value) return
     
+    // 获取用户角色信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    let userRoles = []
+    if (userInfoStr) {
+      const parsedUserInfo = JSON.parse(userInfoStr)
+      userRoles = parsedUserInfo.roles || []
+    }
+    
     // 调用后端API获取菜单列表
     const response = await getUserMenusApi()
     // 将后端返回的菜单数据转换为前端需要的格式
     const convertMenu = (menu) => {
+      // 确保menu对象存在
+      if (!menu) return null
+      
+      // 确保path格式正确，避免重复的斜杠
+      let menuPath = menu.path || ''
+      if (menuPath && !menuPath.startsWith('/')) {
+        menuPath = '/' + menuPath
+      }
+      
+      // 生成唯一的index
+      let index = menuPath
+      if (!index) {
+        if (menu.permissionName) {
+          index = menu.permissionName.toLowerCase().replace(/\s+/g, '-')
+        } else if (menu.permissionId) {
+          index = 'menu-' + menu.permissionId
+        } else {
+          index = 'menu-' + Math.random().toString(36).substr(2, 9)
+        }
+      }
+      
       return {
-        index: menu.menuName.toLowerCase().replace(/\s+/g, '-'),
-        title: menu.menuName,
-        icon: menu.icon,
-        path: menu.path,
-        children: menu.children ? menu.children.map(convertMenu) : []
+        index,
+        title: menu.permissionName || '未命名菜单',
+        icon: menu.icon || 'Document',
+        path: menuPath,
+        children: menu.children ? menu.children.map(convertMenu).filter(item => item !== null) : []
       }
     }
-    // 转换菜单数据格式
-    menus.value = response.data.map(convertMenu)
+    
+    let menuList = []
+    // 如果后端API调用成功，使用后端返回的数据
+    if (response && response.data) {
+      menuList = response.data.map(convertMenu).filter(item => item !== null)
+    } else {
+      // 如果API调用失败，根据用户角色生成菜单
+      menuList = generateMenusByRole(userRoles)
+    }
+    
+    // 检查是否已包含首页菜单，如果没有则添加到菜单列表的最前面
+    const hasHomeMenu = menuList.some(menu => menu.path === '/home' || menu.index === 'home')
+    if (!hasHomeMenu) {
+      menuList.unshift({
+        index: 'home',
+        title: '首页',
+        icon: 'Document',
+        path: '/home'
+      })
+    }
+    
+    menus.value = menuList
+  } catch (error) {
+    // 检查错误类型，如果是认证失败，则不显示错误信息，因为用户可能已经退出登录
+    if (error.message && (error.message.includes('401') || error.message.includes('403') || error.message.includes('登录已过期'))) {
+      return
+    }
+    // 其他错误才显示错误信息
+    ElMessage.error('获取菜单列表失败：' + error.message)
+    
+    // 获取用户角色信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    let userRoles = []
+    if (userInfoStr) {
+      const parsedUserInfo = JSON.parse(userInfoStr)
+      userRoles = parsedUserInfo.roles || []
+    }
+    
+    // 根据用户角色生成菜单
+    menus.value = generateMenusByRole(userRoles)
     
     // 检查是否已包含首页菜单，如果没有则添加到菜单列表的最前面
     const hasHomeMenu = menus.value.some(menu => menu.path === '/home' || menu.index === 'home')
@@ -195,136 +261,215 @@ const getMenus = async () => {
         path: '/home'
       })
     }
-  } catch (error) {
-    // 检查错误类型，如果是认证失败，则不显示错误信息，因为用户可能已经退出登录
-    if (error.message && (error.message.includes('401') || error.message.includes('403') || error.message.includes('登录已过期'))) {
-      return
+  }
+}
+
+// 根据用户角色生成菜单
+const generateMenusByRole = (userRoles) => {
+  // 档案经办人菜单
+  const archiveOperMenus = [
+    {
+      index: 'archive-management',
+      title: '档案管理',
+      icon: 'Document',
+      children: [
+        {
+          index: 'collection',
+          title: '档案采集',
+          icon: 'Collection',
+          path: '/collection'
+        },
+        {
+          index: 'archive-query',
+          title: '档案查询',
+          icon: 'Document',
+          path: '/archive-query'
+        }
+      ]
+    },
+    {
+      index: 'hang-on',
+      title: '挂接管理',
+      icon: 'Link',
+      children: [
+        {
+          index: 'hang-on-main',
+          title: '手动挂接',
+          path: '/hang-on'
+        },
+        {
+          index: 'combination-hang-on',
+          title: '档案组合挂接',
+          path: '/combination-hang-on'
+        }
+      ]
+    },
+    {
+      index: 'notification',
+      title: '通知提醒',
+      icon: 'Link',
+      path: '/notification'
     }
-    // 其他错误才显示错误信息
-    ElMessage.error('获取菜单列表失败：' + error.message)
-    // 如果API调用失败，使用备用的模拟数据
-    menus.value = [
-      {
-        index: 'home',
-        title: '首页',
-        icon: 'Document',
-        path: '/home'
-      },
-      {
-        index: 'archive-management',
-        title: '档案管理',
-        icon: 'Document',
-        children: [
-          {
-            index: 'collection',
-            title: '档案采集',
-            icon: 'Collection',
-            path: '/collection'
-          },
-          {
-            index: 'archive-query',
-            title: '档案查询',
-            icon: 'Document',
-            path: '/archive-query'
-          }
-        ]
-      },
-      {
-        index: 'hang-on',
-        title: '挂接管理',
-        icon: 'Link',
-        children: [
-          {
-            index: 'hang-on-main',
-            title: '挂接管理',
-            path: '/hang-on'
-          },
-          {
-            index: 'combination-hang-on',
-            title: '档案组合挂接',
-            path: '/combination-hang-on'
-          }
-        ]
-      },
-      {
-        index: 'process-management',
-        title: '流程管理',
-        icon: 'Check',
-        children: [
-          {
-            index: 'validation',
-            title: '校验管理',
-            icon: 'Check',
-            path: '/validation'
-          },
-          {
-            index: 'approval',
-            title: '操作审批',
-            icon: 'Lock',
-            path: '/approval'
-          }
-        ]
-      },
-      {
-        index: 'monitoring-audit',
-        title: '监控审计',
-        icon: 'View',
-        children: [
-          {
-            index: 'log',
-            title: '日志管理',
-            icon: 'View',
-            path: '/log'
-          },
-          {
-            index: 'api-monitor',
-            title: '接口监控',
-            icon: 'View',
-            path: '/api-monitor'
-          },
-          {
-            index: 'audit-report',
-            title: '审计报表',
-            icon: 'Document',
-            path: '/audit-report'
-          }
-        ]
-      },
-      {
-        index: 'notification',
-        title: '通知提醒',
-        icon: 'Link',
-        path: '/notification'
-      },
-      {
-        index: 'relation-visualization',
-        title: '关联关系可视化',
-        icon: 'Document',
-        path: '/relation-visualization'
-      },
-      {
-        index: 'system',
-        title: '系统管理',
-        icon: 'Setting',
-        children: [
-          {
-            index: 'system-interface',
-            title: '接口配置',
-            path: '/system'
-          },
-          {
-            index: 'user-management',
-            title: '用户管理',
-            path: '/user-management'
-          },
-          {
-            index: 'role-management',
-            title: '角色管理',
-            path: '/role-management'
-          }
-        ]
-      }
-    ]
+  ]
+  
+  // 部门负责人菜单
+  const deptLeaderMenus = [
+    {
+      index: 'archive-query',
+      title: '档案查询',
+      icon: 'Document',
+      path: '/archive-query'
+    },
+    {
+      index: 'process-management',
+      title: '审批管理',
+      icon: 'Check',
+      children: [
+        {
+          index: 'validation',
+          title: '审批列表',
+          icon: 'Check',
+          path: '/validation'
+        }
+      ]
+    },
+    {
+      index: 'notification',
+      title: '通知提醒',
+      icon: 'Link',
+      path: '/notification'
+    }
+  ]
+  
+  // 档案管理员菜单
+  const archiveAdminMenus = [
+    {
+      index: 'archive-management',
+      title: '档案管理',
+      icon: 'Document',
+      children: [
+        {
+          index: 'archive-query',
+          title: '档案查询',
+          icon: 'Document',
+          path: '/archive-query'
+        }
+      ]
+    },
+    {
+      index: 'process-management',
+      title: '审批管理',
+      icon: 'Check',
+      children: [
+        {
+          index: 'validation',
+          title: '校验管理',
+          icon: 'Check',
+          path: '/validation'
+        }
+      ]
+    },
+    {
+      index: 'monitoring-audit',
+      title: '监控审计',
+      icon: 'View',
+      children: [
+        {
+          index: 'log',
+          title: '日志管理',
+          icon: 'View',
+          path: '/log'
+        }
+      ]
+    },
+    {
+      index: 'notification',
+      title: '通知提醒',
+      icon: 'Link',
+      path: '/notification'
+    },
+    {
+      index: 'relation-visualization',
+      title: '关联关系可视化',
+      icon: 'Document',
+      path: '/relation-visualization'
+    }
+  ]
+  
+  // 系统管理员菜单
+  const superAdminMenus = [
+    {
+      index: 'system',
+      title: '系统管理',
+      icon: 'Setting',
+      children: [
+        {
+          index: 'system-interface',
+          title: '接口配置',
+          path: '/system'
+        },
+        {
+          index: 'user-management',
+          title: '用户管理',
+          path: '/user-management'
+        },
+        {
+          index: 'role-management',
+          title: '角色管理',
+          path: '/role-management'
+        },
+        {
+          index: 'dept-management',
+          title: '部门管理',
+          path: '/dept-management'
+        }
+      ]
+    },
+    {
+      index: 'monitoring-audit',
+      title: '监控审计',
+      icon: 'View',
+      children: [
+        {
+          index: 'log',
+          title: '日志管理',
+          icon: 'View',
+          path: '/log'
+        },
+        {
+          index: 'api-monitor',
+          title: '接口监控',
+          icon: 'View',
+          path: '/api-monitor'
+        },
+        {
+          index: 'audit-report',
+          title: '审计报表',
+          icon: 'Document',
+          path: '/audit-report'
+        }
+      ]
+    },
+    {
+      index: 'notification',
+      title: '通知提醒',
+      icon: 'Link',
+      path: '/notification'
+    }
+  ]
+  
+  // 根据用户角色返回对应的菜单
+  if (userRoles.includes('SUPER_ADMIN')) {
+    return superAdminMenus
+  } else if (userRoles.includes('ARCHIVE_ADMIN')) {
+    return archiveAdminMenus
+  } else if (userRoles.includes('DEPT_LEADER')) {
+    return deptLeaderMenus
+  } else if (userRoles.includes('ARCHIVE_OPER')) {
+    return archiveOperMenus
+  } else {
+    // 默认返回档案经办人菜单
+    return archiveOperMenus
   }
 }
 

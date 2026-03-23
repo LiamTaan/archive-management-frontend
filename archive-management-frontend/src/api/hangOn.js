@@ -8,12 +8,15 @@ import request from './request'
 /**
  * 手动挂接档案
  * @param {number} archiveId 档案ID
- * @param {string} systemCode 目标系统代码
+ * @param {Array} systemCode 目标系统代码数组
  * @param {string} operateBy 操作人
  * @returns {Promise}
  */
 export const manualHangOnApi = (archiveId, systemCode, operateBy) => {
-  return request.post(`/hang-on/manual/${archiveId}?systemCode=${systemCode}&operateBy=${operateBy}`)
+  return request.post(`/hang-on/manual/${archiveId}`, {
+    systemCode,
+    operateBy
+  })
 }
 
 /**
@@ -23,6 +26,15 @@ export const manualHangOnApi = (archiveId, systemCode, operateBy) => {
  */
 export const batchHangOnApi = (data) => {
   return request.post('/hang-on/batch', data)
+}
+
+/**
+ * 校验档案挂接前的业务状态
+ * @param {object} data 请求参数，包含archiveId和systemCode
+ * @returns {Promise}
+ */
+export const checkHangOnValidApi = (data) => {
+  return request.post('/hang-on/check-valid', data)
 }
 
 /**

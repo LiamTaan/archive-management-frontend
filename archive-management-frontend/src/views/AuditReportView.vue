@@ -10,79 +10,85 @@
       
       <div class="report-content">
         <!-- 查询条件 -->
-        <el-form :inline="true" class="query-form">
-          <el-form-item label="报表类型">
-            <el-select v-model="queryParams.reportType" placeholder="请选择报表类型" clearable>
-              <el-option label="挂接审计报表" value="HANG_ON_AUDIT"></el-option>
-              <el-option label="采集审计报表" value="COLLECTION_AUDIT"></el-option>
-              <el-option label="权限审计报表" value="PERMISSION_AUDIT"></el-option>
-              <el-option label="操作审计报表" value="OPERATION_AUDIT"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="报表状态">
-            <el-select v-model="queryParams.status" placeholder="请选择报表状态" clearable>
-              <el-option label="生成中" value="GENERATING"></el-option>
-              <el-option label="已完成" value="COMPLETED"></el-option>
-              <el-option label="失败" value="FAILED"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="时间范围">
-            <el-date-picker
-              v-model="queryParams.dateRange"
-              type="daterange"
-              range-separator="至"
-              start-placeholder="开始日期"
-              end-placeholder="结束日期"
-              :format="'YYYY-MM-DD HH:mm:ss'"
-              :value-format="'YYYY-MM-DD HH:mm:ss'"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="handleQuery">查询</el-button>
-            <el-button @click="handleReset">重置</el-button>
-          </el-form-item>
-        </el-form>
+        <div class="filter-section">
+          <el-form :inline="true" :model="queryParams" label-width="100px">
+            <el-form-item label="报表类型">
+              <el-select v-model="queryParams.reportType" placeholder="请选择报表类型" clearable>
+                <el-option label="挂接审计报表" value="HANG_ON_AUDIT"></el-option>
+                <el-option label="采集审计报表" value="COLLECTION_AUDIT"></el-option>
+                <el-option label="权限审计报表" value="PERMISSION_AUDIT"></el-option>
+                <el-option label="操作审计报表" value="OPERATION_AUDIT"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="报表状态">
+              <el-select v-model="queryParams.status" placeholder="请选择报表状态" clearable>
+                <el-option label="生成中" value="GENERATING"></el-option>
+                <el-option label="已完成" value="COMPLETED"></el-option>
+                <el-option label="失败" value="FAILED"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="时间范围">
+              <el-date-picker
+                v-model="queryParams.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :format="'YYYY-MM-DD HH:mm:ss'"
+                :value-format="'YYYY-MM-DD HH:mm:ss'"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleQuery">查询</el-button>
+              <el-button @click="handleReset">重置</el-button>
+            </el-form-item>
+          </el-form>
+        </div>
         
         <!-- 报表列表 -->
-        <el-table :data="reportList" style="width: 100%" border>
-          <el-table-column prop="id" label="报表ID" width="100"></el-table-column>
-          <el-table-column prop="reportName" label="报表名称" min-width="200"></el-table-column>
-          <el-table-column prop="reportType" label="报表类型" width="150">
-            <template #default="scope">
-              {{ getReportTypeText(scope.row.reportType) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" width="100">
-            <template #default="scope">
-              <el-tag :type="getStatusTagType(scope.row.status)">
-                {{ getStatusText(scope.row.status) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="generateTime" label="生成时间" width="180"></el-table-column>
-          <el-table-column prop="fileSize" label="文件大小" width="100">
-            <template #default="scope">
-              {{ formatFileSize(scope.row.fileSize) }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="generateBy" label="生成人" width="120"></el-table-column>
-          <el-table-column label="操作" width="200" fixed="right">
-            <template #default="scope">
-              <el-button type="primary" size="small" @click="viewReport(scope.row)" :disabled="scope.row.status !== 1">查看</el-button>
-              <el-button type="success" size="small" @click="downloadReport(scope.row)" :disabled="scope.row.status !== 1">下载</el-button>
-              <el-button type="danger" size="small" @click="deleteReport(scope.row)">删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div class="table-section">
+          <el-table :data="reportList" style="width: 100%" border fit>
+            <el-table-column prop="id" label="报表ID" min-width="100"></el-table-column>
+            <el-table-column prop="reportName" label="报表名称" min-width="200"></el-table-column>
+            <el-table-column prop="reportType" label="报表类型" min-width="150">
+              <template #default="scope">
+                {{ getReportTypeText(scope.row.reportType) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" min-width="100">
+              <template #default="scope">
+                <el-tag :type="getStatusTagType(scope.row.status)">
+                  {{ getStatusText(scope.row.status) }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="generateTime" label="生成时间" min-width="180"></el-table-column>
+            <el-table-column prop="fileSize" label="文件大小" min-width="100">
+              <template #default="scope">
+                {{ formatFileSize(scope.row.fileSize) }}
+              </template>
+            </el-table-column>
+            <el-table-column prop="generateBy" label="生成人" min-width="120"></el-table-column>
+            <el-table-column label="操作" min-width="200">
+              <template #default="scope">
+                <el-button type="primary" size="small" @click="viewReport(scope.row)" :disabled="scope.row.status !== 1">查看</el-button>
+                <el-button type="success" size="small" @click="downloadReport(scope.row)" :disabled="scope.row.status !== 1">下载</el-button>
+                <el-button type="danger" size="small" @click="deleteReport(scope.row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
         
         <!-- 分页 -->
-        <div class="pagination-container">
+        <div class="pagination-section">
           <el-pagination
-            layout="prev, pager, next"
-            :total="total"
-            :page-size="pageSize"
             v-model:current-page="currentPage"
-            @update:current-page="handleCurrentChange"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
           ></el-pagination>
         </div>
       </div>
@@ -436,10 +442,8 @@ const viewReport = (row) => {
 // 下载报表
 const downloadReport = (row) => {
   // 调用API下载审计报表
-  auditReportApi.downloadAuditReport(row.id).then(res => {
-    // 创建Blob对象
-    const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    // 创建下载链接
+  auditReportApi.downloadAuditReport(row.id).then(blob => {
+    // 直接使用返回的Blob对象，不需要再次包装
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url

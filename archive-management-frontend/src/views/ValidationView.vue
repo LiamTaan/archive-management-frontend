@@ -17,7 +17,11 @@
                     <el-input v-model="archiveForm.archiveId" placeholder="请输入档案ID" />
                   </el-form-item>
                   <el-form-item label="档案分类">
-                    <el-input v-model="archiveForm.archiveType" placeholder="请输入档案分类" />
+                    <el-select v-model="archiveForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
                   </el-form-item>
                   <el-form-item label="业务单号">
                     <el-input v-model="archiveForm.businessNo" placeholder="请输入业务单号" />
@@ -28,7 +32,18 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="所属部门">
-                    <el-input v-model="archiveForm.department" placeholder="请输入所属部门" />
+                    <el-tree-select
+                      v-model="archiveForm.departmentId"
+                      :data="deptOptions"
+                      :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+                      placeholder="请选择所属部门"
+                      node-key="deptId"
+                      check-strictly
+                      @change="(value, node) => {
+                        archiveForm.departmentId = value;
+                        archiveForm.department = node?.deptName || '';
+                      }"
+                    />
                   </el-form-item>
                   <el-form-item label="文件路径">
                     <el-input v-model="archiveForm.filePath" placeholder="请输入文件路径" />
@@ -136,7 +151,11 @@
                     <el-input v-model="correctForm.archiveId" placeholder="请输入档案ID" />
                   </el-form-item>
                   <el-form-item label="档案分类">
-                    <el-input v-model="correctForm.archiveType" placeholder="请输入档案分类" />
+                    <el-select v-model="correctForm.archiveType" placeholder="请选择档案类型">
+                      <el-option label="文书档案" value="1" />
+                      <el-option label="科技档案" value="2" />
+                      <el-option label="会计档案" value="3" />
+                    </el-select>
                   </el-form-item>
                   <el-form-item label="业务单号">
                     <el-input v-model="correctForm.businessNo" placeholder="请输入业务单号" />
@@ -147,7 +166,18 @@
                 </el-col>
                 <el-col :span="12">
                   <el-form-item label="所属部门">
-                    <el-input v-model="correctForm.department" placeholder="请输入所属部门" />
+                    <el-tree-select
+                      v-model="correctForm.departmentId"
+                      :data="deptOptions"
+                      :props="{ label: 'deptName', value: 'deptId', children: 'children' }"
+                      placeholder="请选择所属部门"
+                      node-key="deptId"
+                      check-strictly
+                      @change="(value, node) => {
+                        correctForm.departmentId = value;
+                        correctForm.department = node?.deptName || '';
+                      }"
+                    />
                   </el-form-item>
                   <el-form-item label="文件路径">
                     <el-input v-model="correctForm.filePath" placeholder="请输入文件路径" />
@@ -189,11 +219,21 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { validateSingleHookApi, validateBatchHookApi, manualCorrectHookApi, generateSingleReportApi, generateBatchReportApi } from '../api/validation'
+import { getAllDeptsApi } from '../api/dept'
+
+// 获取当前登录用户信息
+const getCurrentUser = () => {
+  const userInfoStr = localStorage.getItem('userInfo')
+  return userInfoStr ? JSON.parse(userInfoStr).username : 'unknown'
+}
 
 const activeTab = ref('archive')
+
+// 部门树数据
+const deptOptions = ref([])
 
 // 档案校验
 const archiveForm = reactive({
@@ -201,11 +241,12 @@ const archiveForm = reactive({
   archiveType: '',
   businessNo: '',
   responsiblePerson: '',
+  departmentId: '',
   department: '',
   filePath: '',
   fileType: '',
   md5Value: '',
-  operateBy: 'user'
+  operateBy: getCurrentUser()
 })
 
 const archiveResult = ref(null)
@@ -230,11 +271,12 @@ const resetArchiveForm = () => {
   archiveForm.archiveType = ''
   archiveForm.businessNo = ''
   archiveForm.responsiblePerson = ''
+  archiveForm.departmentId = ''
   archiveForm.department = ''
   archiveForm.filePath = ''
   archiveForm.fileType = ''
   archiveForm.md5Value = ''
-  archiveForm.operateBy = 'user'
+  archiveForm.operateBy = getCurrentUser()
   archiveResult.value = null
 }
 
@@ -295,11 +337,12 @@ const correctForm = reactive({
   archiveType: '',
   businessNo: '',
   responsiblePerson: '',
+  departmentId: '',
   department: '',
   filePath: '',
   fileType: '',
   md5Value: '',
-  operateBy: 'user'
+  operateBy: getCurrentUser()
 })
 
 const correctResult = ref(null)
@@ -324,13 +367,31 @@ const resetCorrectForm = () => {
   correctForm.archiveType = ''
   correctForm.businessNo = ''
   correctForm.responsiblePerson = ''
+  correctForm.departmentId = ''
   correctForm.department = ''
   correctForm.filePath = ''
   correctForm.fileType = ''
   correctForm.md5Value = ''
-  correctForm.operateBy = 'user'
+  correctForm.operateBy = getCurrentUser()
   correctResult.value = null
 }
+
+// 获取所有部门列表
+const getAllDepartments = async () => {
+  try {
+    const response = await getAllDeptsApi()
+    if (response.code === 200) {
+      deptOptions.value = response.data
+    }
+  } catch (error) {
+    console.error('获取部门列表失败:', error)
+  }
+}
+
+// 组件挂载时获取部门列表
+onMounted(() => {
+  getAllDepartments()
+})
 
 const handleTabClick = (tab) => {
   activeTab.value = tab.props.name

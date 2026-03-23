@@ -12,76 +12,83 @@
       </template>
 
       <!-- 搜索表单 -->
-      <el-form :model="searchForm" label-width="80px" :inline="true" style="margin-bottom: 20px;">
-        <el-form-item label="角色编码">
-          <el-input v-model="searchForm.roleCode" placeholder="请输入角色编码" clearable />
-        </el-form-item>
-        <el-form-item label="角色名称">
-          <el-input v-model="searchForm.roleName" placeholder="请输入角色名称" clearable />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
-            <el-option label="启用" value="1" />
-            <el-option label="禁用" value="0" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <div class="filter-section">
+        <el-form :model="searchForm" label-width="80px" :inline="true">
+          <el-form-item label="角色编码">
+            <el-input v-model="searchForm.roleCode" placeholder="请输入角色编码" clearable />
+          </el-form-item>
+          <el-form-item label="角色名称">
+            <el-input v-model="searchForm.roleName" placeholder="请输入角色名称" clearable />
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
+              <el-option label="启用" value="1" />
+              <el-option label="禁用" value="0" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">查询</el-button>
+            <el-button @click="resetSearch">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
 
       <!-- 角色列表 -->
-      <el-table :data="roles" border style="width: 100%">
-        <el-table-column prop="roleId" label="角色ID" width="100" />
-        <el-table-column prop="roleCode" label="角色编码" width="150" />
-        <el-table-column prop="roleName" label="角色名称" width="150" />
-        <el-table-column prop="roleDesc" label="角色描述" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="scope">
-            <el-switch
-              v-model="scope.row.status"
-              :active-value="1"
-              :inactive-value="0"
-              @change="handleStatusChange(scope.row)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="200" />
-        <el-table-column label="操作" width="180">
-          <template #default="scope">
-            <div class="operation-buttons">
-              <div class="button-row">
-                <el-button type="primary" size="small" @click="showEditRoleDialog(scope.row)">
-                  <el-icon><Edit /></el-icon>
-                  编辑
-                </el-button>
-                <el-button type="warning" size="small" @click="showPermissionDialog(scope.row)">
-                  <el-icon><Setting /></el-icon>
-                  分配权限
-                </el-button>
+      <div class="table-section">
+        <el-table :data="roles" border style="width: 100%" fit>
+          <el-table-column prop="roleId" label="角色ID" min-width="100" />
+          <el-table-column prop="roleCode" label="角色编码" min-width="150" />
+          <el-table-column prop="roleName" label="角色名称" min-width="150" />
+          <el-table-column prop="roleDesc" label="角色描述" min-width="280"/>
+          <el-table-column prop="status" label="状态" min-width="100">
+            <template #default="scope">
+              <el-switch
+                v-model="scope.row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(scope.row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" min-width="200" />
+          <el-table-column label="操作" min-width="180">
+            <template #default="scope">
+              <div class="operation-buttons">
+                <div class="button-row">
+                  <el-button type="primary" size="small" @click="showEditRoleDialog(scope.row)">
+                    <el-icon><Edit /></el-icon>
+                    编辑
+                  </el-button>
+                  <el-button type="warning" size="small" @click="showPermissionDialog(scope.row)">
+                    <el-icon><Setting /></el-icon>
+                    分配权限
+                  </el-button>
+                </div>
+                <div class="button-row">
+                  <el-button type="danger" size="small" @click="handleDeleteRole(scope.row.roleId)">
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                  <div class="button-placeholder"></div>
+                </div>
               </div>
-              <div class="button-row">
-                <el-button type="danger" size="small" @click="handleDeleteRole(scope.row.roleId)">
-                  <el-icon><Delete /></el-icon>
-                  删除
-                </el-button>
-                <div class="button-placeholder"></div>
-              </div>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+        </el-table>
 
-      <!-- 分页 -->
-      <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="total"
-        layout="prev, pager, next"
-        @update:current-page="handlePageChange"
-        style="margin-top: 20px; text-align: right;"
-      />
+        <!-- 分页 -->
+        <div class="pagination-section">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </div>
 
       <!-- 新增/编辑角色对话框 -->
       <el-dialog v-model="roleDialogVisible" :title="isEdit ? '编辑角色' : '新增角色'" width="50%">

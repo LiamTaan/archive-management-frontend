@@ -160,14 +160,57 @@ const flattenMenuTree = (menuTree) => {
   return flatList
 }
 
+// 将后端返回的SysPermission结构转换为前端期望的MenuDTO结构
+const convertToMenuDTO = (permission) => {
+  if (!permission) return null
+  
+  // 转换权限类型
+  let menuType
+  if (permission.permissionType === 'directory') {
+    menuType = 0
+  } else if (permission.permissionType === 'menu') {
+    menuType = 1
+  } else {
+    menuType = 2 // button或其他类型都视为按钮
+  }
+  
+  const menuDTO = {
+    menuId: permission.permissionId,
+    menuName: permission.permissionName,
+    menuType: menuType,
+    parentId: permission.parentId || 0,
+    path: permission.path || '',
+    component: permission.component || '',
+    icon: permission.icon || '',
+    sort: permission.sortOrder || 0,
+    status: permission.status || 1,
+    createTime: permission.createTime,
+    updateTime: permission.updateTime
+  }
+  
+  // 递归转换子菜单
+  if (permission.children && permission.children.length > 0) {
+    menuDTO.children = permission.children.map(child => convertToMenuDTO(child))
+  }
+  
+  return menuDTO
+}
+
+// 将后端返回的SysPermission列表转换为前端期望的MenuDTO列表
+const convertToMenuDTOList = (permissions) => {
+  if (!permissions || permissions.length === 0) return []
+  return permissions.map(permission => convertToMenuDTO(permission))
+}
+
 // 获取菜单列表
 const getMenuList = async () => {
   try {
     const response = await getAllMenusApi()
-    menuList.value = response.data
+    // 转换后端返回的数据结构
+    menuList.value = convertToMenuDTOList(response.data)
     
     // 将树形结构转换为扁平结构，然后构建菜单选项（只包含目录和菜单，不包含按钮）
-    const flatMenuList = flattenMenuTree(response.data)
+    const flatMenuList = flattenMenuTree(menuList.value)
     menuOptions.value = flatMenuList.filter(menu => menu.menuType !== 2)
   } catch (error) {
     ElMessage.error('获取菜单列表失败：' + error.message)
@@ -210,17 +253,44 @@ const openEditMenuDialog = (menu) => {
   dialogVisible.value = true
 }
 
+// 将前端的MenuDTO结构转换为后端期望的SysPermission结构
+const convertToSysPermission = (menuDTO) => {
+  if (!menuDTO) return null
+  
+  // 转换菜单类型
+  let permissionType
+  if (menuDTO.menuType === 0) {
+    permissionType = 'directory'
+  } else if (menuDTO.menuType === 1) {
+    permissionType = 'menu'
+  } else {
+    permissionType = 'button' // 按钮类型
+  }
+  
+  const permission = {
+    permissionId: menuDTO.menuId,
+    permissionName: menuDTO.menuName,
+    permissionCode: menuDTO.menuName ? menuDTO.menuName.toLowerCase().replace(/\s+/g, ':') : '',
+    permissionType: permissionType,
+    parentId: menuDTO.parentId === 0 ? null : menuDTO.parentId,
+    path: menuDTO.path,
+    component: menuDTO.component,
+    icon: menuDTO.icon,
+    sortOrder: menuDTO.sort,
+    status: menuDTO.status
+  }
+  
+  return permission
+}
+
 // 提交表单
 const submitForm = async () => {
   if (!menuFormRef.value) return
   await menuFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        // 处理父菜单ID，如果是0则设置为null
-        const submitData = { ...formData }
-        if (submitData.parentId === 0) {
-          submitData.parentId = null
-        }
+        // 转换为后端期望的SysPermission结构
+        const submitData = convertToSysPermission(formData)
         
         let response
         if (formData.menuId) {

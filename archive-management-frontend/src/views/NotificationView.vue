@@ -26,7 +26,7 @@
         
         <!-- 通知列表 -->
         <el-table 
-          :data="notifications" 
+          :data="filteredNotifications" 
           style="width: 100%" 
           border
           @selection-change="handleSelectionChange"
@@ -155,15 +155,43 @@ const total = ref(0)
 const fetchNotifications = async () => {
   loading.value = true
   try {
+    // 从localStorage获取当前登录用户信息
+    const userInfoStr = localStorage.getItem('userInfo')
+    const userInfo = userInfoStr ? JSON.parse(userInfoStr) : { username: 'admin' }
+    
+    // 根据筛选条件构建查询参数
     const params = {
       page: page.value,
-      pageSize: pageSize.value,
-      type: activeFilter.value === 'all' ? '' : activeFilter.value,
-      isRead: activeFilter.value === 'unread' ? 0 : activeFilter.value === 'read' ? 1 : ''
+      pageSize: pageSize.value
     }
+    
+    // 添加筛选条件
+    if (activeFilter.value === 'unread') {
+      params.status = 0
+    } else if (activeFilter.value === 'read') {
+      params.status = 1
+    } else if (activeFilter.value === 'system') {
+      params.type = 0
+    } else if (activeFilter.value === 'business') {
+      params.type != 0
+    }
+    
     const response = await getNotifications(params)
-    notifications.value = response.data.list
-    total.value = Number(response.data.total) || 0
+    // 将后端字段映射到前端字段
+    notifications.value = (response.data ? response.data.records || response.data : []).map(notification => ({
+      id: notification.id,
+      title: notification.title,
+      content: notification.content,
+      type: notification.type === 0 ? 'system' : 'business',
+      isRead: notification.status === 1,
+      createTime: notification.createTime,
+      readTime: notification.readTime || (notification.status === 1 ? notification.updateTime : ''),
+      businessId: notification.businessId,
+      businessType: notification.businessType
+    }))
+    
+    // 设置总条数
+    total.value = response.data ? (response.data.total || notifications.value.length) : 0
   } catch (error) {
     console.error('获取通知列表失败:', error)
   } finally {

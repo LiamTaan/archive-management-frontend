@@ -10,187 +10,202 @@
       <el-tabs v-model="activeTab" @tab-click="handleTabClick">
         <el-tab-pane label="挂接日志" name="hang-on">
           <div class="tab-content">
-            <el-form :model="hangOnLogForm" label-width="120px" :inline="true">
-              <el-form-item label="档案ID">
-                <el-input v-model="hangOnLogForm.archiveId" placeholder="请输入档案ID" />
-              </el-form-item>
-              <el-form-item label="操作人">
-                <el-input v-model="hangOnLogForm.operateBy" placeholder="请输入操作人" />
-              </el-form-item>
-              <el-form-item label="挂接结果">
-                <el-select v-model="hangOnLogForm.result" placeholder="请选择挂接结果">
-                  <el-option label="全部" value="" />
-                  <el-option label="成功" value="1" />
-                  <el-option label="失败" value="2" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="挂接类型">
-                <el-select v-model="hangOnLogForm.hangOnType" placeholder="请选择挂接类型">
-                  <el-option label="全部" value="" />
-                  <el-option label="自动挂接" value="1" />
-                  <el-option label="手动挂接" value="2" />
-                </el-select>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleGetHangOnLogs" :loading="hangOnLogLoading">查询</el-button>
-                <el-button @click="resetHangOnLogForm">重置</el-button>
-              </el-form-item>
-            </el-form>
+            <div class="filter-section">
+              <el-form :model="hangOnLogForm" label-width="120px" :inline="true">
+                <el-form-item label="档案ID">
+                  <el-input v-model="hangOnLogForm.archiveId" placeholder="请输入档案ID" />
+                </el-form-item>
+                <el-form-item label="操作人">
+                  <el-input v-model="hangOnLogForm.operateBy" placeholder="请输入操作人" />
+                </el-form-item>
+                <el-form-item label="挂接结果">
+                  <el-select v-model="hangOnLogForm.result" placeholder="请选择挂接结果">
+                    <el-option label="全部" value="" />
+                    <el-option label="成功" value="1" />
+                    <el-option label="失败" value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="挂接类型">
+                  <el-select v-model="hangOnLogForm.hangOnType" placeholder="请选择挂接类型">
+                    <el-option label="全部" value="" />
+                    <el-option label="自动挂接" value="1" />
+                    <el-option label="手动挂接" value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleGetHangOnLogs" :loading="hangOnLogLoading">查询</el-button>
+                  <el-button @click="resetHangOnLogForm">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
 
-            <div class="result-info">
-              <el-table :data="hangOnLogs" stripe style="width: 100%" :loading="hangOnLogLoading">
-                <el-table-column prop="id" label="日志ID" width="100" />
-                <el-table-column prop="archiveId" label="档案ID" width="120" />
-                <el-table-column prop="hangOnType" label="挂接类型" width="100">
+            <div class="table-section">
+              <el-table :data="hangOnLogs" border style="width: 100%" fit :loading="hangOnLogLoading">
+                <el-table-column prop="id" label="日志ID" min-width="100" />
+                <el-table-column prop="archiveId" label="档案ID" min-width="120" />
+                <el-table-column prop="hangOnType" label="挂接类型" min-width="100">
                   <template #default="scope">
                     {{ scope.row.hangOnType === 0 ? '挂接' : scope.row.hangOnType === 1 ? '修改' : '解除' }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="result" label="挂接结果" width="100">
+                <el-table-column prop="result" label="挂接结果" min-width="100">
                   <template #default="scope">
                     <span :class="scope.row.result === 1 ? 'success' : 'fail'">
                       {{ scope.row.result === 1 ? '成功' : '失败' }}
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="operateBy" label="操作人" width="100" />
-                <el-table-column label="挂接方式" width="100">
+                <el-table-column prop="operateBy" label="操作人" min-width="100" />
+                <el-table-column label="挂接方式" min-width="100">
                   <template #default="scope">
                     {{ parseHangOnMethod(scope.row.description) }}
                   </template>
                 </el-table-column>
-                <el-table-column label="目标系统" width="120">
+                <el-table-column label="目标系统" min-width="120">
                   <template #default="scope">
                     {{ parseTargetSystem(scope.row.description) }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="description" label="挂接描述" />
-                <el-table-column prop="errorInfo" label="错误信息" />
-                <el-table-column prop="createTime" label="创建时间" width="200" />
+                <el-table-column prop="description" label="挂接描述" min-width="200" />
+                <el-table-column prop="errorInfo" label="错误信息"  min-width="200"/>
+                <el-table-column prop="createTime" label="创建时间" min-width="200" />
               </el-table>
 
-              <el-pagination
-                v-model:current-page="hangOnLogCurrentPage"
-                :page-size="pageSize"
-                :total="hangOnLogTotal"
-                layout="prev, pager, next"
-                @update:current-page="handleHangOnLogPageChange"
-                style="margin-top: 20px; text-align: right;"
-              />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="hangOnLogCurrentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="hangOnLogTotal"
+                  @size-change="handleSizeChange"
+                  @current-change="handleHangOnLogPageChange"
+                />
+              </div>
             </div>
           </div>
         </el-tab-pane>
 
         <el-tab-pane label="采集日志" name="collection">
           <div class="tab-content">
-            <el-form :model="collectionLogForm" label-width="120px" :inline="true">
-              <el-form-item label="采集类型">
-                <el-select v-model="collectionLogForm.collectionType" placeholder="请选择采集类型">
-                  <el-option label="全部" value="" />
-                  <el-option label="自动采集" value="2" />
-                  <el-option label="手动采集" value="0" />
-                  <el-option label="批量采集" value="1" />
-                  <el-option label="外部导入" value="3" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="操作人">
-                <el-input v-model="collectionLogForm.operateBy" placeholder="请输入操作人" />
-              </el-form-item>
-              <el-form-item label="采集结果">
-                <el-select v-model="collectionLogForm.result" placeholder="请选择采集结果">
-                  <el-option label="全部" value="" />
-                  <el-option label="成功" value="1" />
-                  <el-option label="失败" value="2" />
-                </el-select>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleGetCollectionLogs" :loading="collectionLogLoading">查询</el-button>
-                <el-button @click="resetCollectionLogForm">重置</el-button>
-              </el-form-item>
-            </el-form>
+            <div class="filter-section">
+              <el-form :model="collectionLogForm" label-width="120px" :inline="true">
+                <el-form-item label="采集类型">
+                  <el-select v-model="collectionLogForm.collectionType" placeholder="请选择采集类型">
+                    <el-option label="全部" value="" />
+                    <el-option label="自动采集" value="2" />
+                    <el-option label="手动采集" value="0" />
+                    <el-option label="批量采集" value="1" />
+                    <el-option label="外部导入" value="3" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="操作人">
+                  <el-input v-model="collectionLogForm.operateBy" placeholder="请输入操作人" />
+                </el-form-item>
+                <el-form-item label="采集结果">
+                  <el-select v-model="collectionLogForm.result" placeholder="请选择采集结果">
+                    <el-option label="全部" value="" />
+                    <el-option label="成功" value="1" />
+                    <el-option label="失败" value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleGetCollectionLogs" :loading="collectionLogLoading">查询</el-button>
+                  <el-button @click="resetCollectionLogForm">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
 
-            <div class="result-info">
-              <el-table :data="collectionLogs" stripe style="width: 100%" :loading="collectionLogLoading">
-                <el-table-column prop="id" label="日志ID" width="100" />
-                <el-table-column prop="collectionType" label="采集类型" width="100">
+            <div class="table-section">
+              <el-table :data="collectionLogs" border style="width: 100%" fit :loading="collectionLogLoading">
+                <el-table-column prop="id" label="日志ID" min-width="100" />
+                <el-table-column prop="collectionType" label="采集类型" min-width="120">
                   <template #default="scope">
                     {{ getCollectionTypeLabel(scope.row.collectionType) }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="result" label="采集结果" width="100">
+                <el-table-column prop="result" label="采集结果" min-width="100">
                   <template #default="scope">
                     <span :class="scope.row.result === 1 ? 'success' : 'fail'">
                       {{ scope.row.result === 1 ? '成功' : '失败' }}
                     </span>
                   </template>
                 </el-table-column>
-                <el-table-column prop="operateBy" label="操作人" width="100" />
+                <el-table-column prop="operateBy" label="操作人" min-width="100" />
                 <el-table-column prop="description" label="采集描述" />
-                <el-table-column prop="createTime" label="创建时间" width="200" />
+                <el-table-column prop="createTime" label="创建时间" min-width="200" />
               </el-table>
 
-              <el-pagination
-                v-model:current-page="collectionLogCurrentPage"
-                :page-size="pageSize"
-                :total="collectionLogTotal"
-                layout="prev, pager, next"
-                @update:current-page="handleCollectionLogPageChange"
-                style="margin-top: 20px; text-align: right;"
-              />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="collectionLogCurrentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="collectionLogTotal"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCollectionLogPageChange"
+                />
+              </div>
             </div>
           </div>
         </el-tab-pane>
 
         <el-tab-pane label="系统日志" name="system">
           <div class="tab-content">
-            <el-form :model="systemLogForm" label-width="120px" :inline="true">
-              <el-form-item label="操作人">
-                <el-input v-model="systemLogForm.operateBy" placeholder="请输入操作人" />
-              </el-form-item>
-              <el-form-item label="操作类型">
-                <el-select v-model="systemLogForm.operationType" placeholder="请选择操作类型">
-                  <el-option label="全部" value="" />
-                  <el-option label="登录" value="login" />
-                  <el-option label="退出" value="logout" />
-                  <el-option label="配置修改" value="config" />
-                </el-select>
-              </el-form-item>
-              <el-form-item label="操作结果">
-                <el-select v-model="systemLogForm.result" placeholder="请选择操作结果">
-                  <el-option label="全部" value="" />
-                  <el-option label="成功" value="1" />
-                  <el-option label="失败" value="2" />
-                </el-select>
-              </el-form-item>
-              <el-form-item>
-                <el-button type="primary" @click="handleGetSystemLogs" :loading="systemLogLoading">查询</el-button>
-                <el-button @click="resetSystemLogForm">重置</el-button>
-              </el-form-item>
-            </el-form>
+            <div class="filter-section">
+              <el-form :model="systemLogForm" label-width="120px" :inline="true">
+                <el-form-item label="操作人">
+                  <el-input v-model="systemLogForm.operateBy" placeholder="请输入操作人" />
+                </el-form-item>
+                <el-form-item label="操作类型">
+                  <el-select v-model="systemLogForm.operationType" placeholder="请选择操作类型">
+                    <el-option label="全部" value="" />
+                    <el-option label="登录" value="login" />
+                    <el-option label="退出" value="logout" />
+                    <el-option label="配置修改" value="config" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item label="操作结果">
+                  <el-select v-model="systemLogForm.result" placeholder="请选择操作结果">
+                    <el-option label="全部" value="" />
+                    <el-option label="成功" value="1" />
+                    <el-option label="失败" value="2" />
+                  </el-select>
+                </el-form-item>
+                <el-form-item>
+                  <el-button type="primary" @click="handleGetSystemLogs" :loading="systemLogLoading">查询</el-button>
+                  <el-button @click="resetSystemLogForm">重置</el-button>
+                </el-form-item>
+              </el-form>
+            </div>
 
-            <div class="result-info">
-              <el-table :data="systemLogs" stripe style="width: 100%" :loading="systemLogLoading">
-                <el-table-column prop="id" label="日志ID" width="100" />
-                <el-table-column prop="operateBy" label="操作人" width="100" />
-                <el-table-column prop="logType" label="操作类型" width="100">
+            <div class="table-section">
+              <el-table :data="systemLogs" border style="width: 100%" fit :loading="systemLogLoading">
+                <el-table-column prop="id" label="日志ID" min-width="100" />
+                <el-table-column prop="operateBy" label="操作人" min-width="100" />
+                <el-table-column prop="logType" label="操作类型" min-width="120">
                   <template #default="scope">
                     {{ getOperationTypeLabel(scope.row.logType) }}
                   </template>
                 </el-table-column>
-                <el-table-column prop="content" label="操作内容" />
+                <el-table-column prop="content" label="操作内容" min-width="250"/>
                 <el-table-column prop="title" label="日志标题" />
-                <el-table-column prop="operateIp" label="IP地址" width="150" />
-                <el-table-column prop="createTime" label="创建时间" width="200" />
+                <el-table-column prop="operateIp" label="IP地址" min-width="150" />
+                <el-table-column prop="createTime" label="创建时间" min-width="200" />
               </el-table>
 
-              <el-pagination
-                v-model:current-page="systemLogCurrentPage"
-                :page-size="pageSize"
-                :total="systemLogTotal"
-                layout="prev, pager, next"
-                @update:current-page="handleSystemLogPageChange"
-                style="margin-top: 20px; text-align: right;"
-              />
+              <div class="pagination-section">
+                <el-pagination
+                  v-model:current-page="systemLogCurrentPage"
+                  v-model:page-size="pageSize"
+                  :page-sizes="[10, 20, 50, 100]"
+                  layout="total, sizes, prev, pager, next, jumper"
+                  :total="systemLogTotal"
+                  @size-change="handleSizeChange"
+                  @current-change="handleSystemLogPageChange"
+                />
+              </div>
             </div>
           </div>
         </el-tab-pane>
@@ -377,6 +392,22 @@ const resetSystemLogForm = async () => {
 const handleSystemLogPageChange = (page) => {
   systemLogCurrentPage.value = page
   handleGetSystemLogs()
+}
+
+// 处理每页条数变化
+const handleSizeChange = (size) => {
+  pageSize.value = size
+  // 根据当前激活的标签页重置对应的页码
+  if (activeTab.value === 'hang-on') {
+    hangOnLogCurrentPage.value = 1
+    handleGetHangOnLogs()
+  } else if (activeTab.value === 'collection') {
+    collectionLogCurrentPage.value = 1
+    handleGetCollectionLogs()
+  } else if (activeTab.value === 'system') {
+    systemLogCurrentPage.value = 1
+    handleGetSystemLogs()
+  }
 }
 
 const getOperationTypeLabel = (type) => {
